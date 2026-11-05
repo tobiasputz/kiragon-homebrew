@@ -1,27 +1,116 @@
 name: Test and publish Foundry module
+
 on:
   push:
-    tags: ['v*']
+    tags:
+      - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag to create or repair (for example v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+        type: string
+
 permissions:
   contents: write
+
+# Prevent two jobs from simultaneously replacing the assets of one release.
+concurrency:
+  group: kiragon-release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out the release tag
+        uses: actions/checkout@v4
+        with:
+          # Manual rebuilds use the code already associated with the tag.
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Validate release tag
+        shell: bash
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][a-zA-Z0-9.-]+)?$ ]]; then
+            echo "::error::Tag must look like v1.0.0 (optionally with a suffix)."
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
+
       - name: Run tests
+        shell: bash
         run: |
+          set -euo pipefail
           for f in scripts/*.mjs tests/*.mjs; do node --check "$f"; done
           node --test tests/*.test.mjs
+
       - name: Package Foundry release
-        run: python3 tools/build_release.py --repository "$GITHUB_REPOSITORY" --tag "$GITHUB_REF_NAME"
-      - name: Publish release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build_release.py --repository "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG"
+
+      - name: Verify manifest and release archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYCODE'
+          import json
+          import os
+          import pathlib
+          import zipfile
+
+          root = pathlib.Path('dist')
+          manifest = json.loads((root / 'module.json').read_text(encoding='utf-8'))
+          tag = os.environ['RELEASE_TAG']
+          repo = os.environ['GITHUB_REPOSITORY']
+          assert manifest['id'] == 'kiragon-homebrew'
+          assert manifest['version'] == tag.removeprefix('v')
+          assert manifest['manifest'] == f'https://github.com/{repo}/releases/latest/download/module.json'
+          assert manifest['download'] == f'https://github.com/{repo}/releases/download/{tag}/kiragon-homebrew.zip'
+          with zipfile.ZipFile(root / 'kiragon-homebrew.zip') as z:
+              assert z.testzip() is None
+              assert json.loads(z.read('module.json')) == manifest
+              for name in ('scripts/main.mjs', 'scripts/engine.mjs', 'packs/abyssal-erosion.json'):
+                  assert name in z.namelist(), f'Missing from archive: {name}'
+          print('Release assets validated:', tag, repo)
+          PYCODE
+
+      - name: Create release or replace its existing assets
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/module.json dist/kiragon-homebrew.zip \
-            --title "Kiragon Homebrew $GITHUB_REF_NAME" --generate-notes
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $RELEASE_TAG exists: replacing module assets."
+            gh release upload "$RELEASE_TAG" \
+              dist/module.json dist/kiragon-homebrew.zip \
+              --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            echo "Creating release $RELEASE_TAG."
+            gh release create "$RELEASE_TAG" \
+              dist/module.json dist/kiragon-homebrew.zip \
+              --title "Kiragon Homebrew $RELEASE_TAG" \
+              --generate-notes --verify-tag --repo "$GITHUB_REPOSITORY"
+          fi
+
+      - name: Confirm both assets are published
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[].name' | sort > release-assets.txt
+          grep -Fxq 'module.json' release-assets.txt
+          grep -Fxq 'kiragon-homebrew.zip' release-assets.txt
+          echo "Both Foundry release assets are present."

@@ -48,3 +48,8 @@ Upload `dist/module.json` and `dist/kiragon-homebrew.zip` to that repository's *
 ## Offline installation
 
 No GitHub repository is required to play. Extract the installable ZIP into `FoundryVTT/Data/modules/kiragon-homebrew/` and enable it in the world.
+
+
+## Repair an already-existing release
+
+See [RELEASE_FIX_INSTRUCTIONS.md](RELEASE_FIX_INSTRUCTIONS.md). The workflow detects an existing tag release and replaces its assets. Manual workflow dispatch accepts an existing tag such as `v1.0.0`.
