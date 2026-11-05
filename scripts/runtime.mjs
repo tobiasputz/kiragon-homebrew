@@ -1,4 +1,4 @@
-import { MODULE_ID, ABILITIES, validatePack, clone, int, clamp, newActorPack, newClock, secondsRemaining, countedBells, remaining, tierData, effectiveLoss, adjustResource, applyRupture, effectValue, outcomeLoss, degreeName } from './engine.mjs';
+import { MODULE_ID, ABILITIES, validatePack, clone, int, clamp, newActorPack, newClock, secondsRemaining, countedBells, elapsedClockSeconds, remaining, tierData, effectiveLoss, adjustResource, applyRupture, effectValue, outcomeLoss, degreeName } from './engine.mjs';
 
 export class KiragonRuntime {
   constructor(){this.processing=false;this.onChange=()=>{};this.lastDraw=0;}
@@ -11,7 +11,7 @@ export class KiragonRuntime {
   isEnabled(id){return this.enabled().includes(id);}
   clockStates(){return game.settings.get(MODULE_ID,'clockStates')??{};}
   clockKey(packId,clockId){return `${packId}/${clockId}`;}
-  clock(packId,c){return this.clockStates()[this.clockKey(packId,c.id)]??newClock(c);}
+  clock(packId,c){const old=this.clockStates()[this.clockKey(packId,c.id)]??newClock(c);return c.repeat?{...old,repeat:true,durationSec:c.minutes*60}:old;}
   state(actor,packId){return actor?.getFlag(MODULE_ID,'packs')?.[packId]??null;}
   enrolled(actor,id){return this.state(actor,id)?.enrolled===true;}
   entry(actor,pack,track){return this.state(actor,pack.id)?.tracks?.[track.id]??null;}
@@ -28,10 +28,22 @@ export class KiragonRuntime {
     await game.settings.set(MODULE_ID,'packs',old);await this.syncAll();this.onChange();return next;
   }
   async deletePack(id){this.requireGM();if(game.actors.contents.some(a=>this.enrolled(a,id)))throw Error('Reset or unenroll all actors first. Their state will not be silently discarded.');const old=this.packs();await game.settings.set(MODULE_ID,'packs',old.filter(p=>p.id!==id));await this.setEnabled(id,false);const states=this.clockStates();for(const k of Object.keys(states))if(k.startsWith(id+'/'))delete states[k];await game.settings.set(MODULE_ID,'clockStates',states);this.onChange();}
-  async setEnabled(id,enabled){this.requireGM();if(!this.pack(id)&&enabled)throw Error('Unknown pack.');const ids=new Set(this.enabled());enabled?ids.add(id):ids.delete(id);await game.settings.set(MODULE_ID,'enabled',[...ids]);if(!enabled){const p=this.pack(id);if(p){for(const c of p.clocks){const x=this.clock(id,c);if(x.running)await this.updateClock(id,c.id,{...x,remainingSec:secondsRemaining(x),running:false,deadlineMs:0});}}}await this.syncAll();this.onChange();}
-  async ensureBuiltins(){if(!this.primaryGM)return;const old=this.packs();for(const file of ['abyssal-erosion','fate-scars-example']){if(old.some(x=>x.id===file))continue;try{const response=await fetch(`modules/${MODULE_ID}/packs/${file}.json`);if(!response.ok)throw Error(response.status);old.push(validatePack(await response.json()));}catch(e){console.error(MODULE_ID,'Failed to load builtin pack',file,e);}}
-    if(old.length!==this.packs().length)await game.settings.set(MODULE_ID,'packs',old);
-    // Install the Abyss example disabled by default if this is a fresh world.
+  async setEnabled(id,enabled){this.requireGM();if(!this.pack(id)&&enabled)throw Error('Unknown pack.');const ids=new Set(this.enabled());enabled?ids.add(id):ids.delete(id);await game.settings.set(MODULE_ID,'enabled',[...ids]);if(!enabled){const p=this.pack(id);if(p){for(const c of p.clocks){const x=this.clock(id,c);if(x.running)await this.updateClock(id,c.id,{...x,remainingSec:secondsRemaining(x),running:false,deadlineMs:0,...(c.repeat?{elapsedSec:elapsedClockSeconds(x),anchorMs:0}: {})});}}}await this.syncAll();this.onChange();}
+  async ensureBuiltins(){if(!this.primaryGM)return;const old=this.packs();let changed=false;
+    for(const file of ['abyssal-erosion','fate-scars-example']){try{
+      const response=await fetch(`modules/${MODULE_ID}/packs/${file}.json`);if(!response.ok)throw Error(response.status);
+      const builtin=validatePack(await response.json());const index=old.findIndex(x=>x.id===file);
+      if(index<0){old.push(builtin);changed=true;}
+      else if(file==='abyssal-erosion'&&old[index].version==='1.1.0'){
+        // Migration from the original 90-minute absolute deadline. Resource spending is
+        // preserved, but elapsed clocks reset because the old and new drains differ.
+        old[index]=builtin;changed=true;
+        const states=this.clockStates();delete states[this.clockKey(file,'severance')];
+        await game.settings.set(MODULE_ID,'clockStates',states);
+        ui.notifications?.warn('Kiragon Abyssal Erosion updated: the old 90-minute clock was reset. Start the new repeating 10-minute bell when ready. Existing character Erosion is preserved.');
+      }
+    }catch(e){console.error(MODULE_ID,'Failed to load builtin pack',file,e);}}
+    if(changed)await game.settings.set(MODULE_ID,'packs',old);
     this.onChange();
   }
   async enroll(actor,packId,key){this.requireGM();const pack=this.pack(packId);if(!pack||!this.isEnabled(packId))throw Error('Enable a valid pack first.');if(actor?.type!=='character')throw Error('Choose a PF2e player character.');if(this.enrolled(actor,packId))throw Error(`${actor.name} is already enrolled in ${pack.name}.`);
@@ -95,19 +107,19 @@ export class KiragonRuntime {
   }
   async grantEffect(actor,p,action){const b=action.bonus;if(!b)return;const r={key:'FlatModifier',selector:b.selector,value:b.value,label:action.label};if(b.type&&b.type!=='untyped')r.type=b.type;if(b.removeAfterRoll)r.removeAfterRoll='if-enabled';await actor.createEmbeddedDocuments('Item',[{name:`Kiragon: ${action.label}`,type:'effect',img:'icons/magic/control/buff-strength-muscle-damage.webp',system:{description:{value:`<p>${this.e(action.description??'Temporary homebrew bonus')}</p>`},duration:{value:1,unit:'minutes',sustained:false},traits:{value:[]},rules:[r]},flags:{[MODULE_ID]:{temporary:true,source:`${p.id}/${action.id}`}}}]);}
   async updateClock(packId,id,state){this.requireGM();const all=this.clockStates();all[this.clockKey(packId,id)]=state;await game.settings.set(MODULE_ID,'clockStates',all);this.onChange();}
-  async startClock(packId,id){this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);if(!def)throw Error('Clock not found.');if(!this.isEnabled(packId))throw Error('Enable the pack first.');const old=this.clock(packId,def);if(old.running)return;const rem=secondsRemaining(old);if(rem<=0)throw Error('Clock expired; reset the expedition to start again.');const active=!!game.combats.contents.find(c=>c.started);const paused=!!(def.pauseDuringCombat&&active);
-    await this.updateClock(packId,id,{...old,remainingSec:rem,running:!paused,deadlineMs:paused?0:Date.now()+rem*1000,combatPaused:paused});await this.chat(`<b>${this.e(def.label)}</b> started (${def.minutes} min).`);}
-  async pauseClock(packId,id){this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);const old=this.clock(packId,def);await this.updateClock(packId,id,{...old,running:false,remainingSec:secondsRemaining(old),deadlineMs:0,combatPaused:false});}
-  async advanceClock(packId,id,seconds){this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);const old=this.clock(packId,def);const rem=Math.max(0,secondsRemaining(old)-int(seconds));await this.updateClock(packId,id,{...old,remainingSec:rem,deadlineMs:old.running?Date.now()+rem*1000:0});await this.processClocks();}
+  async startClock(packId,id){this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);if(!def)throw Error('Clock not found.');if(!this.isEnabled(packId))throw Error('Enable the pack first.');const old=this.clock(packId,def);if(old.running)return;const rem=secondsRemaining(old);if(!def.repeat&&rem<=0)throw Error('Clock expired; reset the expedition to start again.');const active=!!game.combats.contents.find(c=>c.started);const paused=!!(def.pauseDuringCombat&&active);
+    await this.updateClock(packId,id,{...old,remainingSec:rem,running:!paused,deadlineMs:paused?0:Date.now()+rem*1000,combatPaused:paused,...(def.repeat?{elapsedSec:elapsedClockSeconds(old),anchorMs:paused?0:Date.now()}: {})});await this.chat(`<b>${this.e(def.label)}</b> started (${def.minutes} min).`);}
+  async pauseClock(packId,id){this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);const old=this.clock(packId,def);await this.updateClock(packId,id,{...old,running:false,remainingSec:secondsRemaining(old),deadlineMs:0,combatPaused:false,...(def.repeat?{elapsedSec:elapsedClockSeconds(old),anchorMs:0}: {})});}
+  async advanceClock(packId,id,seconds){this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);const old=this.clock(packId,def);const rem=Math.max(0,secondsRemaining(old)-int(seconds));await this.updateClock(packId,id,def.repeat?{...old,elapsedSec:elapsedClockSeconds(old)+Math.max(0,int(seconds)),anchorMs:old.running?Date.now():0}:{...old,remainingSec:rem,deadlineMs:old.running?Date.now()+rem*1000:0});await this.processClocks();}
   async processClocks(){if(!this.primaryGM||this.processing)return;this.processing=true;
-    try{let all=this.clockStates(),changed=false;for(const p of this.packs().filter(x=>this.isEnabled(x.id)))for(const def of p.clocks){const key=this.clockKey(p.id,def.id),c=all[key]??newClock(def);const bells=countedBells(c,def);if(bells>c.bells){all[key]={...c,bells,...(bells>=def.bells?{running:false,remainingSec:0,deadlineMs:0}:{})};changed=true;for(let n=c.bells+1;n<=bells;n++)await this.chat(`<b>${this.e(def.label)}: Bell ${n}/${def.bells}</b>${n===def.bells?' — The deadline is reached.':''}`);}
-      else if(secondsRemaining(c)===0){all[key]={...c,running:false,remainingSec:0,deadlineMs:0};changed=true;}
+    try{let all=this.clockStates(),changed=false;for(const p of this.packs().filter(x=>this.isEnabled(x.id)))for(const def of p.clocks){const key=this.clockKey(p.id,def.id),c=all[key]??newClock(def);const bells=countedBells(c,def);if(bells>c.bells){all[key]={...c,bells,...(!def.repeat&&bells>=def.bells?{running:false,remainingSec:0,deadlineMs:0}:{})};changed=true;for(let n=c.bells+1;n<=bells;n++)await this.chat(`<b>${this.e(def.label)}: Bell ${n}${def.repeat?'':`/${def.bells}`}</b>${!def.repeat&&n===def.bells?' — The deadline is reached.':''}`);}
+      else if(!def.repeat&&secondsRemaining(c)===0){all[key]={...c,running:false,remainingSec:0,deadlineMs:0};changed=true;}
     }
     if(changed){await game.settings.set(MODULE_ID,'clockStates',all);await this.syncAll();}
     }catch(e){console.error(MODULE_ID,e);ui.notifications?.error(`Clock error: ${e.message}`);}finally{this.processing=false;}
   }
-  async combatChanged(){if(!this.primaryGM)return;const active=!!game.combats.contents.find(c=>c.started);const all=this.clockStates();let changed=false;for(const p of this.packs().filter(x=>this.isEnabled(x.id)))for(const def of p.clocks.filter(x=>x.pauseDuringCombat)){const key=this.clockKey(p.id,def.id),c=all[key]??newClock(def);if(active&&c.running){all[key]={...c,running:false,remainingSec:secondsRemaining(c),deadlineMs:0,combatPaused:true};changed=true;}
-    else if(!active&&c.combatPaused){const rem=Math.max(0,secondsRemaining(c)-int(def.combatCostMinutes*60));all[key]={...c,remainingSec:rem,running:rem>0,deadlineMs:rem>0?Date.now()+rem*1000:0,combatPaused:false};changed=true;}
+  async combatChanged(){if(!this.primaryGM)return;const active=!!game.combats.contents.find(c=>c.started);const all=this.clockStates();let changed=false;for(const p of this.packs().filter(x=>this.isEnabled(x.id)))for(const def of p.clocks.filter(x=>x.pauseDuringCombat)){const key=this.clockKey(p.id,def.id),c=all[key]??newClock(def);if(active&&c.running){all[key]={...c,running:false,remainingSec:secondsRemaining(c),deadlineMs:0,combatPaused:true,...(def.repeat?{elapsedSec:elapsedClockSeconds(c),anchorMs:0}: {})};changed=true;}
+    else if(!active&&c.combatPaused){const rem=Math.max(0,secondsRemaining(c)-int(def.combatCostMinutes*60));all[key]=def.repeat?{...c,elapsedSec:elapsedClockSeconds(c)+Math.max(0,int(def.combatCostMinutes*60)),anchorMs:Date.now(),running:true,combatPaused:false}:{...c,remainingSec:rem,running:rem>0,deadlineMs:rem>0?Date.now()+rem*1000:0,combatPaused:false};changed=true;}
   }
   if(changed){await game.settings.set(MODULE_ID,'clockStates',all);await this.processClocks();this.onChange();}}
   async importAdversaries(packId){this.requireGM();const pack=this.pack(packId);if(!pack)throw Error('Unknown pack.');let n=0;for(const a of pack.adversaries){const found=game.actors.contents.some(actor=>actor.getFlag(MODULE_ID,'pack')===packId&&actor.getFlag(MODULE_ID,'adversary')===a.id);if(found)continue;const raw=clone(a.actor);raw.flags??={};raw.flags[MODULE_ID]={pack:packId,adversary:a.id};await Actor.create(raw,{renderSheet:false});n++;}ui.notifications.info(`${n} Kiragon NPCs imported; existing entries skipped.`);this.onChange();return n;}

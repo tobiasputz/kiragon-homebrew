@@ -116,3 +116,10 @@ You can also import PF2e feats, spells and equipment using their native Foundry 
 ## Other Notes
 
 The JSON parser validates identifiers, component shapes, action kinds, track references, clocks, outcomes, and basic resource data. It is **not** a complete validation of all PF2e actor/item source document shapes; Foundry will validate those when importing them, and may reject source data created for incompatible PF2e versions. Imported content is not automatically rendered in a compendium pack: the initial implementation imports into world Actors/Items, and exports rules as standalone JSON.
+
+
+### Repeating exposure clocks
+
+A clock may specify `"repeat": true`. Its `minutes` and `bells` define a repeating duration; a 10-minute clock with `bells: 1` sounds once every 10 minutes forever. The UI displays the time until the next bell rather than a global expiry.
+
+For a track tied to such a clock, use `"clock": {"id":"severance", "loss":"fixed", "amount":2}` to subtract exactly 2 resource points **per bell** independent of the initial resource pool. Existing `loss: "fractional"` remains supported on finite clocks for other mechanics.

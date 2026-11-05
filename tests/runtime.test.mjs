@@ -55,11 +55,13 @@ test('independent mechanics and per-pack tracks do not bleed state',async()=>{
   await rt.adjust(hero,b.id,'fate',-3);assert.equal(rt.resource(hero,b,b.tracks[0]).value,5);assert.equal(rt.resource(hero,a,a.tracks[0]).value,22);
   await rt.adjust(hero,a.id,'identity',-5);assert.equal(rt.resource(hero,b,b.tracks[0]).value,5);
 });
-test('manual clock advancement works while paused or running; final bell is absolute',async()=>{
+test('manual repeatable bells erode per interval without universal deadline',async()=>{
   const {rt,hero}=setup(),p=read('abyssal-erosion');await rt.savePack(p);await rt.setEnabled(p.id,true);await rt.enroll(hero,p.id);
   await rt.startClock(p.id,'severance');await rt.pauseClock(p.id,'severance');
   await rt.advanceClock(p.id,'severance',600);assert.equal(rt.clock(p.id,p.clocks[0]).bells,1);
   await rt.advanceClock(p.id,'severance',4800);assert.equal(rt.clock(p.id,p.clocks[0]).bells,9);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,4);
+  await rt.advanceClock(p.id,'severance',1200);assert.equal(rt.clock(p.id,p.clocks[0]).bells,11);
   assert.equal(rt.resource(hero,p,p.tracks[0]).value,0);assert.equal(rt.state(hero,p.id).tracks.identity.lost,true);
   await assert.rejects(()=>rt.adjust(hero,p.id,'identity',1));
 });

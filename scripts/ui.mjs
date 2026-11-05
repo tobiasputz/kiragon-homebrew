@@ -37,10 +37,10 @@ function renderActor(rt,actor,p){
   return `<div class="kg-actor"><div class="kg-line"><h3>${escapeHtml(actor.name)}</h3><div class="kg-inline">Key ${isGM?select(ABILITIES.map(a=>({value:a,label:a.toUpperCase()})),state.key,`data-key="${actor.id}"`):escapeHtml(state.key.toUpperCase())}</div></div>
     <div class="kg-tracks">${trackCards}</div>${actions}</div>`;
 }
-function renderClock(rt,p,c){const st=rt.clock(p.id,c);const remaining=secondsRemaining(st);return `<div class="kg-clock"><div class="kg-line"><div><div class="kg-subtle">${escapeHtml(c.label.toUpperCase())}</div><div class="kg-timer" data-clock-time="${escapeHtml(c.id)}">${fmtTime(remaining)}</div></div><div><b>Bell ${st.bells}/${c.bells}</b><div class="kg-subtle">${st.running?'Running':st.combatPaused?'Paused during combat':'Paused'}</div></div></div>
+function renderClock(rt,p,c){const st=rt.clock(p.id,c);const remaining=secondsRemaining(st);return `<div class="kg-clock"><div class="kg-line"><div><div class="kg-subtle">${escapeHtml(c.label.toUpperCase())}</div><div class="kg-timer" data-clock-time="${escapeHtml(c.id)}">${fmtTime(remaining)}</div></div><div><b>Bell ${st.bells}${c.repeat?'':`/${c.bells}`}</b><div class="kg-subtle">${st.running?'Running':st.combatPaused?'Paused during combat':'Paused'}</div></div></div>
   <div class="kg-meter"><span style="width:${Math.round(100*remaining/st.durationSec)}%"></span></div>
   ${rt.gm&&rt.isEnabled(p.id)?`<div class="kg-controls">
-    ${button('Start / Resume','start',`data-id="${c.id}"`,'',st.running||remaining<=0)}
+    ${button('Start / Resume','start',`data-id="${c.id}"`,'',st.running||(!c.repeat&&remaining<=0))}
     ${button('Pause','pause',`data-id="${c.id}"`,'',!st.running)}
     ${button('−1 min','advance',`data-id="${c.id}" data-seconds="60"`)}
     ${button('−5 min','advance',`data-id="${c.id}" data-seconds="300"`)}

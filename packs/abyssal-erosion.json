@@ -2,14 +2,15 @@
   "schema": 1,
   "id": "abyssal-erosion",
   "name": "Abyssal Erosion — Emotion & Humanity",
-  "version": "1.1.0",
-  "description": "The Abyss amplifies the key attribute while eroding a Will-based humanity pool. Nine real-world bells lead to severance. Monsters attack the remaining pool instead of HP.",
+  "version": "1.2.0",
+  "description": "Unbounded real-time Erosion: every 10-minute bell costs all enrolled characters 2 Will. Higher initial Will lasts longer; monster abilities accelerate individual dissolution. No universal deadline.",
   "clocks": [
     {
       "id": "severance",
-      "label": "Severance Clock",
-      "minutes": 90,
-      "bells": 9,
+      "label": "Abyssal Erosion Bell",
+      "minutes": 10,
+      "bells": 1,
+      "repeat": true,
       "pauseDuringCombat": true,
       "combatCostMinutes": 5
     }
@@ -23,8 +24,8 @@
       "normalLabel": "Human",
       "clock": {
         "id": "severance",
-        "loss": "fractional",
-        "fraction": 1
+        "loss": "fixed",
+        "amount": 2
       },
       "tiers": [
         {

@@ -126,3 +126,12 @@ python3 tools/build_release.py --repository YOUR_ACCOUNT/YOUR_REPO --tag v1.0.0
 To install from GitHub releases, use the `module.json` file uploaded to the release, not GitHub's `/blob/` viewer. The release workflow generates the appropriate `download` URL and ZIP archive.
 
 This is a custom, unofficial Foundry module. Back up world data before migrating or changing pack IDs. The automations and JSON schema are explicitly limited for reliability and safe debugging.
+
+
+## Erosion: repeating bell (v1.1.0)
+
+The Abyss pack no longer has a universal time limit. Every **10 minutes of active exposure**, each enrolled character suffers **2 Erosion**, measured as a loss of their starting Will modifier. A character starting with Will +16 survives 8 bells (80 minutes); Will +24 survives 12 bells (120 minutes), before additional monster drains, recovery, or temptation. The bell repeats indefinitely and its next interval countdown resets automatically.
+
+The frequency and drain are editable in the JSON pack: `clocks[0].minutes` and `tracks[0].clock.amount`. The mechanic does **not** drain a percentage of each character's original Will. Monster abilities still deal independent Erosion. The global timer counts exposure, not an automatic ending.
+
+Existing worlds with the original built-in Abyss pack version `1.1.0` are upgraded automatically: enrolled characters keep their recorded non-clock Erosion, but the old absolute clock is reset. If you manually customized that earlier built-in pack, export it before upgrading. Custom packs with other version numbers are left unchanged.

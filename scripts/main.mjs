@@ -1,4 +1,4 @@
-import { MODULE_ID } from './engine.mjs';
+import { MODULE_ID, secondsRemaining } from './engine.mjs';
 import { KiragonRuntime } from './runtime.mjs';
 import { openDashboard, redraw } from './ui.mjs';
 const rt=new KiragonRuntime();rt.onChange=()=>redraw(rt);
@@ -36,7 +36,7 @@ Hooks.once('ready',async()=>{
   try{await rt.ensureBuiltins();if(rt.primaryGM){await rt.syncAll();await rt.combatChanged();}}catch(e){console.error(MODULE_ID,'Initialization failed',e);ui.notifications.error(`Kiragon: ${e.message}`);}
   // UI-only interval updates countdown numbers. The primary GM alone processes bell changes.
   setInterval(()=>{
-    for(const el of rt.dashboard?.element?.querySelectorAll?.('[data-clock-time]')??[]){const p=rt.pack(rt.dashboardPackId??'');const def=p?.clocks.find(c=>c.id===el.dataset.clockTime);if(def){const remain=(x=>x.running?Math.max(0,Math.ceil((x.deadlineMs-Date.now())/1000)):x.remainingSec)(rt.clock(p.id,def));el.textContent=`${String(Math.floor(remain/60)).padStart(2,'0')}:${String(remain%60).padStart(2,'0')}`;}}
+    for(const el of rt.dashboard?.element?.querySelectorAll?.('[data-clock-time]')??[]){const p=rt.pack(rt.dashboardPackId??'');const def=p?.clocks.find(c=>c.id===el.dataset.clockTime);if(def){const remain=secondsRemaining(rt.clock(p.id,def));el.textContent=`${String(Math.floor(remain/60)).padStart(2,'0')}:${String(remain%60).padStart(2,'0')}`;}}
     if(rt.primaryGM)rt.processClocks();
   },1000);
   console.info('Kiragon Homebrew Engine ready: game.modules.get("kiragon-homebrew").api.open()');

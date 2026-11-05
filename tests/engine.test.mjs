@@ -11,13 +11,14 @@ test('builtins validate; import format is engine-wide not Abyss-specific',()=>{
   assert.deepEqual(p.adversaries.map(a=>a.actor.system.details.level.value),[12,13,14]);
   assert.deepEqual(p.adversaries.flatMap(a=>a.abilities.map(b=>b.kind)),['save','save','skill-vs-perception']);
 });
-test('fractional clock advances and reaches 0 exactly at deadline',()=>{
-  const s=newActorPack(p,{identity:22},'str').tracks.identity;
-  assert.equal(remaining(t,s,view(0)),22);
-  assert.equal(remaining(t,s,view(3)),15);
-  assert.equal(timeLoss(t,s,view(9)),22);
-  assert.equal(remaining(t,s,view(9)),0);
-  assert.equal(remaining(t,{...s,restored:50},view(9)),0,'last bell is absolute even with restoration');
+test('repeatable fixed drain scales survival with original Will',()=>{
+  const small=newActorPack(p,{identity:16},'str').tracks.identity;
+  const large=newActorPack(p,{identity:24},'str').tracks.identity;
+  assert.equal(remaining(t,small,view(4)),8);
+  assert.equal(remaining(t,large,view(4)),16);
+  assert.equal(remaining(t,small,view(8)),0);
+  assert.equal(remaining(t,large,view(8)),8);
+  assert.equal(remaining(t,large,view(12)),0);
 });
 test('power tiers polarize as Will erodes; cannot regain it by taking more Erosion',()=>{
   const s=newActorPack(p,{identity:20},'wis').tracks.identity;
@@ -39,11 +40,11 @@ test('once an external clock has finished, no additional recovery reverses deadl
   const state=newActorPack(ex,{fate:8},'cha').tracks.fate;
   assert.equal(remaining(t2,state,c2),4,'partial drain pack survives the clock');
 });
-test('clock uses elapsed real time, including catch-up',()=>{
-  const cstate={...newClock(c),running:true,deadlineMs:300000,remainingSec:5400};
-  assert.equal(secondsRemaining(cstate,0),300);
-  assert.equal(countedBells(cstate,c,0),8);
-  assert.equal(countedBells(cstate,c,400000),9);
+test('repeat clock has no terminal bell and catches up after pauses',()=>{
+  const running={...newClock(c),repeat:true,running:true,elapsedSec:120,anchorMs:1000};
+  assert.equal(countedBells(running,c,1201000),2);
+  assert.equal(countedBells({...running,elapsedSec:7200,running:false},c,1201000),12);
+  assert.equal(secondsRemaining({...running,elapsedSec:650,running:false}),550);
 });
 test('rupture costs and monster save outcomes',()=>{
   const s={...newActorPack(p,{identity:20}).tracks.identity,spent:16};

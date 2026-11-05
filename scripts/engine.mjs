@@ -25,12 +25,13 @@ export function validatePack(raw) {
   const trackIds=unique(raw.tracks,'track');
   unique(raw.actions,'action'); unique(raw.adversaries,'adversary');
   for (const c of raw.clocks) {
+    if (c.repeat!==undefined && typeof c.repeat!=='boolean')throw Error(`Clock ${c.id} repeat must be boolean.`);
     if (typeof c.label!=='string' || !Number.isFinite(c.minutes) || c.minutes<1 || c.minutes>1440 || !Number.isInteger(c.bells) || c.bells<1 || c.bells>100) throw Error(`Clock ${c.id} must have label, minutes (1–1440) and bells (1–100).`);
   }
   for (const t of raw.tracks) {
     if(typeof t.label!=='string'||!ALLOWED_SOURCES.has(t.source))throw Error(`Track ${t.id} requires a label and source actor-will or fixed.`);
     if(t.source==='fixed' && (!Number.isInteger(t.initial)||t.initial<1||t.initial>9999))throw Error(`Track ${t.id} needs a positive integer initial value.`);
-    if(t.clock && (!clockIds.has(t.clock.id) || t.clock.loss!=='fractional' || !Number.isFinite(t.clock.fraction) || t.clock.fraction<0||t.clock.fraction>1))throw Error(`Invalid fractional clock drain for ${t.id}.`);
+    if(t.clock && (!clockIds.has(t.clock.id) || !(['fractional','fixed'].includes(t.clock.loss)) || (t.clock.loss==='fractional' && (!Number.isFinite(t.clock.fraction)||t.clock.fraction<0||t.clock.fraction>1)) || (t.clock.loss==='fixed' && (!Number.isInteger(t.clock.amount)||t.clock.amount<1||t.clock.amount>100))))throw Error(`Invalid clock drain for ${t.id}.`);
     if(t.tiers){
       if(!Array.isArray(t.tiers)||t.tiers.length>12)throw Error(`Invalid tiers on ${t.id}.`);
       let previous=1.01;
@@ -70,18 +71,21 @@ export function newActorPack(pack,initialByTrack={},key='str'){
   for(const t of pack.tracks)tracks[t.id]={base:Math.max(1,int(initialByTrack[t.id]??t.initial,1)),spent:0,restored:0,surrenderedPower:0,lost:false};
   return {enrolled:true,key:ABILITIES.includes(key)?key:'str',tracks,uses:{}};
 }
-export function newClock(c){return {durationSec:c.minutes*60,remainingSec:c.minutes*60,deadlineMs:0,running:false,bells:0,combatPaused:false};}
-export function secondsRemaining(c,now=Date.now()){return c.running?Math.max(0,Math.ceil((c.deadlineMs-now)/1000)):Math.max(0,int(c.remainingSec));}
+export function newClock(c){return {durationSec:c.minutes*60,remainingSec:c.minutes*60,deadlineMs:0,running:false,bells:0,combatPaused:false,elapsedSec:0,anchorMs:0};}
+export function elapsedClockSeconds(c,now=Date.now()){return Math.max(0,(c.elapsedSec??0)+(c.running&&c.anchorMs?Math.max(0,(now-c.anchorMs)/1000):0));}
+export function secondsRemaining(c,now=Date.now()){if(c.repeat){const period=c.durationSec;const elapsed=elapsedClockSeconds(c,now);const remainder=elapsed%period;return Math.max(1,Math.ceil(period-remainder));}return c.running?Math.max(0,Math.ceil((c.deadlineMs-now)/1000)):Math.max(0,int(c.remainingSec));}
 export function countedBells(c,def,now=Date.now()){
+  if(def.repeat)return Math.max(0,Math.floor((elapsedClockSeconds(c,now)+0.00001)/(def.minutes*60/def.bells)));
   return clamp(Math.floor((c.durationSec-secondsRemaining(c,now)+0.00001)/(c.durationSec/def.bells)),0,def.bells);
 }
 export function timeLoss(t,st,clockState){
   if(!t.clock||!clockState)return 0;
+  if(t.clock.loss==='fixed')return Math.max(0,int(clockState.bells))*t.clock.amount;
   return Math.floor(st.base*t.clock.fraction*clamp(clockState.bells,0,clockState.totalBells)/clockState.totalBells);
 }
 export function remaining(t,st,clockState){
   if(!st)return 0;
-  if(t.clock?.fraction===1 && clockState && clockState.bells>=clockState.totalBells)return 0;
+  if(t.clock?.loss==='fractional' && t.clock.fraction===1 && clockState && clockState.bells>=clockState.totalBells)return 0;
   return clamp(st.base-timeLoss(t,st,clockState)-Math.max(0,int(st.spent))+Math.max(0,int(st.restored)),0,st.base);
 }
 export function tierData(t,st,clockState){

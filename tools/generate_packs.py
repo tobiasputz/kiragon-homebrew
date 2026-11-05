@@ -11,10 +11,10 @@ for raw, id in zip(old,['regret','hollow','mirror']):
  raw['flags']={'kiragon-homebrew':{'pack':'abyssal-erosion','adversary':id}}
  adv.append(dict(id=id,actor=raw,abilities=[abilities[id]]))
 pack={
- 'schema':1,'id':'abyssal-erosion','name':'Abyssal Erosion — Emotion & Humanity','version':'1.1.0',
- 'description':'The Abyss amplifies the key attribute while eroding a Will-based humanity pool. Nine real-world bells lead to severance. Monsters attack the remaining pool instead of HP.',
- 'clocks':[{'id':'severance','label':'Severance Clock','minutes':90,'bells':9,'pauseDuringCombat':True,'combatCostMinutes':5}],
- 'tracks':[{'id':'identity','label':'Identity (Will)','source':'actor-will','terminalLabel':'Lost to the Abyss','normalLabel':'Human','clock':{'id':'severance','loss':'fractional','fraction':1},
+ 'schema':1,'id':'abyssal-erosion','name':'Abyssal Erosion — Emotion & Humanity','version':'1.2.0',
+ 'description':'Unbounded real-time Erosion: each 10-minute bell drains 2 Will. Larger Will pools last longer; monsters accelerate collapse.',
+ 'clocks':[{'id':'severance','label':'Abyssal Erosion Bell','minutes':10,'bells':1,'repeat':True,'pauseDuringCombat':True,'combatCostMinutes':5}],
+ 'tracks':[{'id':'identity','label':'Identity (Will)','source':'actor-will','terminalLabel':'Lost to the Abyss','normalLabel':'Human','clock':{'id':'severance','loss':'fixed','amount':2},
     'tiers':[{'atOrBelow':0.75,'label':'Heightened','power':1},{'atOrBelow':0.5,'label':'Extreme','power':2},{'atOrBelow':0.25,'label':'Near-demonic','power':3}],
     'effects':[{'kind':'flat-modifier','selector':'will','basedOn':'missing','multiplier':-1,'type':'untyped','label':'Erosion — Loss of Identity'},
                {'kind':'key-attribute','basedOn':'power','label':'Emotional Polarization'}],
