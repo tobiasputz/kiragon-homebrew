@@ -1,0 +1,829 @@
+{
+  "schema": 1,
+  "id": "abyssal-erosion",
+  "name": "Abyssal Erosion — Emotion & Humanity",
+  "version": "1.1.0",
+  "description": "The Abyss amplifies the key attribute while eroding a Will-based humanity pool. Nine real-world bells lead to severance. Monsters attack the remaining pool instead of HP.",
+  "clocks": [
+    {
+      "id": "severance",
+      "label": "Severance Clock",
+      "minutes": 90,
+      "bells": 9,
+      "pauseDuringCombat": true,
+      "combatCostMinutes": 5
+    }
+  ],
+  "tracks": [
+    {
+      "id": "identity",
+      "label": "Identity (Will)",
+      "source": "actor-will",
+      "terminalLabel": "Lost to the Abyss",
+      "normalLabel": "Human",
+      "clock": {
+        "id": "severance",
+        "loss": "fractional",
+        "fraction": 1
+      },
+      "tiers": [
+        {
+          "atOrBelow": 0.75,
+          "label": "Heightened",
+          "power": 1
+        },
+        {
+          "atOrBelow": 0.5,
+          "label": "Extreme",
+          "power": 2
+        },
+        {
+          "atOrBelow": 0.25,
+          "label": "Near-demonic",
+          "power": 3
+        }
+      ],
+      "effects": [
+        {
+          "kind": "flat-modifier",
+          "selector": "will",
+          "basedOn": "missing",
+          "multiplier": -1,
+          "type": "untyped",
+          "label": "Erosion — Loss of Identity"
+        },
+        {
+          "kind": "key-attribute",
+          "basedOn": "power",
+          "label": "Emotional Polarization"
+        }
+      ],
+      "themes": {
+        "str": {
+          "name": "Wrath / Exhilaration",
+          "surge": "Overpower, break, attack",
+          "crash": "Humiliation or thwarted aggression"
+        },
+        "dex": {
+          "name": "Exhilaration / Terror",
+          "surge": "Dodge, evade, outpace",
+          "crash": "Entrapment, vulnerability, pursuit"
+        },
+        "con": {
+          "name": "Invincibility / Emptiness",
+          "surge": "Endure, remain unbroken",
+          "crash": "Apathy, loss of connection"
+        },
+        "int": {
+          "name": "Revelation / Obsession",
+          "surge": "Deduce, understand, solve",
+          "crash": "Uncertainty, unfinished questions"
+        },
+        "wis": {
+          "name": "Ecstasy / Despair",
+          "surge": "Empathize, perceive, heal",
+          "crash": "Witnessed suffering, loss of hope"
+        },
+        "cha": {
+          "name": "Adoration / Rejection",
+          "surge": "Inspire, compel, enchant",
+          "crash": "Being ignored, rejected, abandoned"
+        }
+      }
+    }
+  ],
+  "actions": [
+    {
+      "id": "erode-1",
+      "label": "+1 Erosion",
+      "kind": "adjust",
+      "track": "identity",
+      "amount": -1,
+      "gmOnly": true,
+      "description": "Drain 1 remaining identity."
+    },
+    {
+      "id": "erode-2",
+      "label": "+2 Erosion",
+      "kind": "adjust",
+      "track": "identity",
+      "amount": -2,
+      "gmOnly": true,
+      "description": "Drain 2 remaining identity."
+    },
+    {
+      "id": "restore-1",
+      "label": "Restore 1 Will",
+      "kind": "adjust",
+      "track": "identity",
+      "amount": 1,
+      "gmOnly": true,
+      "description": "GM restoration."
+    },
+    {
+      "id": "rupture-resist",
+      "label": "Rupture: Resist",
+      "kind": "rupture",
+      "track": "identity",
+      "costByTier": [
+        0,
+        1,
+        2,
+        3,
+        3
+      ],
+      "once": "encounter-or-bell",
+      "requiresTier": 1,
+      "group": "rupture",
+      "description": "Resist emotion at a cost equal to current polarization tier."
+    },
+    {
+      "id": "rupture-indulge",
+      "label": "Rupture: Indulge",
+      "kind": "announce",
+      "track": "identity",
+      "once": "encounter-or-bell",
+      "requiresTier": 1,
+      "group": "rupture",
+      "description": "Indulge the dominant emotion: no immediate Erosion, but roleplay consequences."
+    },
+    {
+      "id": "overdrive",
+      "label": "Emotional Overdrive",
+      "kind": "overdrive",
+      "track": "identity",
+      "amount": -1,
+      "once": "encounter-or-bell",
+      "requiresTier": 1,
+      "bonus": {
+        "selector": "attack",
+        "type": "circumstance",
+        "value": 1,
+        "removeAfterRoll": true
+      },
+      "description": "Spend 1 Erosion; +1 circumstance bonus to next attack roll. Selector can be changed in the JSON editor."
+    },
+    {
+      "id": "reject",
+      "label": "Reject the Abyss",
+      "kind": "surrender",
+      "track": "identity",
+      "restore": 2,
+      "surrender": 1,
+      "once": "expedition",
+      "requiresTier": 1,
+      "description": "Forfeit a point of polarization for the remainder of the expedition to restore 2 Will."
+    }
+  ],
+  "adversaries": [
+    {
+      "id": "regret",
+      "actor": {
+        "name": "Grasping Regret",
+        "type": "npc",
+        "img": "icons/svg/mystery-man.svg",
+        "prototypeToken": {
+          "name": "Grasping Regret",
+          "displayName": 30,
+          "disposition": -1,
+          "actorLink": false,
+          "texture": {
+            "src": "icons/svg/mystery-man.svg"
+          },
+          "width": 1,
+          "height": 1
+        },
+        "system": {
+          "details": {
+            "level": {
+              "value": 12
+            },
+            "publicNotes": "<h2>The Grasping Regret — Creature 12</h2><p><b>Medium demon, fiend, unholy</b> • spectral skirmisher • <b>AC</b> 34; <b>HP</b> 205; <b>Fort</b> +22, <b>Ref</b> +26, <b>Will</b> +21; <b>Perception</b> +22; <b>Speed</b> 35 feet, fly 35 feet.</p><p>A creature made of scenes that should have ended differently. Its many hands clutch at the victim’s unresolved mistakes. Each injury is to identity rather than flesh.</p><p><b>Use:</b> one creature at a time, skirmish and force Reflex checks. Never use ordinary attack damage against PCs. The creature’s HP is spectral coherence.</p>",
+            "privateNotes": "GM: Signature ability uses the Abyssal Erosion dashboard. These monsters deal Erosion rather than HP damage. Their HP represents spectral coherence while PCs fight them.",
+            "alliance": "opposition"
+          },
+          "traits": {
+            "value": [
+              "demon",
+              "fiend",
+              "unholy"
+            ],
+            "rarity": "rare",
+            "size": {
+              "value": "med"
+            },
+            "languages": {
+              "value": [
+                "chthonian"
+              ]
+            }
+          },
+          "attributes": {
+            "ac": {
+              "value": 34,
+              "details": ""
+            },
+            "hp": {
+              "value": 205,
+              "max": 205,
+              "temp": 0,
+              "details": "Spectral coherence; the party can reduce this normally."
+            },
+            "speed": {
+              "value": 35,
+              "otherSpeeds": [
+                {
+                  "type": "fly",
+                  "value": 35
+                }
+              ]
+            },
+            "immunities": [],
+            "resistances": [],
+            "weaknesses": []
+          },
+          "perception": {
+            "mod": 22,
+            "senses": [
+              {
+                "type": "darkvision",
+                "acuity": "precise",
+                "range": 0
+              }
+            ]
+          },
+          "saves": {
+            "fortitude": {
+              "value": 22
+            },
+            "reflex": {
+              "value": 26
+            },
+            "will": {
+              "value": 21
+            }
+          },
+          "abilities": {
+            "str": {
+              "mod": 4
+            },
+            "dex": {
+              "mod": 6
+            },
+            "con": {
+              "mod": 4
+            },
+            "int": {
+              "mod": 1
+            },
+            "wis": {
+              "mod": 3
+            },
+            "cha": {
+              "mod": 5
+            }
+          },
+          "skills": {
+            "stealth": {
+              "base": 27
+            },
+            "acrobatics": {
+              "base": 26
+            },
+            "deception": {
+              "base": 23
+            },
+            "intimidation": {
+              "base": 25
+            }
+          },
+          "resources": {
+            "focus": {
+              "value": 0,
+              "max": 0
+            }
+          }
+        },
+        "items": [
+          {
+            "name": "Grasp of What Was",
+            "type": "action",
+            "img": "icons/svg/aura.svg",
+            "system": {
+              "actionType": {
+                "value": "action"
+              },
+              "actions": {
+                "value": 2
+              },
+              "category": "offensive",
+              "description": {
+                "value": "<p><b>Emotion, mental, fear, Erosion • 30 feet • Reflex DC 32.</b> A wave of grasping hands made of missed opportunities. <b>Critical success/success</b> no effect; <b>failure</b> 1 Erosion; <b>critical failure</b> 2 Erosion and immobilized until the end of the victim’s next turn (Escape DC 32). Once per target per round. <b>Use the Erosion dashboard to roll and apply.</b></p>"
+              },
+              "traits": {
+                "value": []
+              },
+              "rules": []
+            }
+          },
+          {
+            "name": "Slip Between Regrets",
+            "type": "action",
+            "img": "icons/svg/aura.svg",
+            "system": {
+              "actionType": {
+                "value": "action"
+              },
+              "actions": {
+                "value": 1
+              },
+              "category": "offensive",
+              "description": {
+                "value": "<p>The Regret Flies or Steps up to half its speed, passing through narrow spaces as an image; it cannot end within a solid object. This is purely positioning, not automatic incorporeal immunity.</p>"
+              },
+              "traits": {
+                "value": []
+              },
+              "rules": []
+            }
+          },
+          {
+            "name": "Echo of the Unsaid",
+            "type": "action",
+            "img": "icons/svg/aura.svg",
+            "system": {
+              "actionType": {
+                "value": "action"
+              },
+              "actions": {
+                "value": 1
+              },
+              "category": "offensive",
+              "description": {
+                "value": "<p><b>Emotion, mental • 30 feet.</b> A victim hears words they regret. The target becomes off-guard to the Regret until the beginning of its next turn unless it spends 1 action voicing something it wishes it had said. No additional Erosion. GM adjudicates immunity to repeated attempts.</p>"
+              },
+              "traits": {
+                "value": []
+              },
+              "rules": []
+            }
+          }
+        ],
+        "flags": {
+          "kiragon-homebrew": {
+            "pack": "abyssal-erosion",
+            "adversary": "regret"
+          }
+        }
+      },
+      "abilities": [
+        {
+          "id": "grasp",
+          "label": "Grasp of What Was",
+          "kind": "save",
+          "defense": "reflex",
+          "dc": 32,
+          "track": "identity",
+          "erosion": {
+            "criticalFailure": 2,
+            "failure": 1
+          },
+          "conditionOnCriticalFailure": "immobilized",
+          "note": "30 ft. Immobilized until end of next turn; Escape DC 32; manage expiration manually."
+        }
+      ]
+    },
+    {
+      "id": "hollow",
+      "actor": {
+        "name": "The Hollow One",
+        "type": "npc",
+        "img": "icons/svg/mystery-man.svg",
+        "prototypeToken": {
+          "name": "The Hollow One",
+          "displayName": 30,
+          "disposition": -1,
+          "actorLink": false,
+          "texture": {
+            "src": "icons/svg/mystery-man.svg"
+          },
+          "width": 1,
+          "height": 1
+        },
+        "system": {
+          "details": {
+            "level": {
+              "value": 13
+            },
+            "publicNotes": "<h2>The Hollow One — Creature 13</h2><p><b>Medium demon, fiend, unholy</b> • spectral endurance predator • <b>AC</b> 35; <b>HP</b> 240; <b>Fort</b> +28, <b>Ref</b> +21, <b>Will</b> +24; <b>Perception</b> +23; <b>Speed</b> 25 feet, fly 25 feet.</p><p>A perfectly still absence wearing the shape of someone who stopped feeling. It wins by waiting until nothing matters.</p><p><b>Use:</b> one creature alone = moderate encounter for four level-13 PCs by XP, but Erosion can make it dangerous. Its HP represents coherence. No damaging Strikes.</p>",
+            "privateNotes": "GM: Signature ability uses the Abyssal Erosion dashboard. These monsters deal Erosion rather than HP damage. Their HP represents spectral coherence while PCs fight them.",
+            "alliance": "opposition"
+          },
+          "traits": {
+            "value": [
+              "demon",
+              "fiend",
+              "unholy"
+            ],
+            "rarity": "rare",
+            "size": {
+              "value": "med"
+            },
+            "languages": {
+              "value": [
+                "chthonian"
+              ]
+            }
+          },
+          "attributes": {
+            "ac": {
+              "value": 35,
+              "details": ""
+            },
+            "hp": {
+              "value": 240,
+              "max": 240,
+              "temp": 0,
+              "details": "Spectral coherence; the party can reduce this normally."
+            },
+            "speed": {
+              "value": 25,
+              "otherSpeeds": [
+                {
+                  "type": "fly",
+                  "value": 25
+                }
+              ]
+            },
+            "immunities": [],
+            "resistances": [],
+            "weaknesses": []
+          },
+          "perception": {
+            "mod": 23,
+            "senses": [
+              {
+                "type": "darkvision",
+                "acuity": "precise",
+                "range": 0
+              }
+            ]
+          },
+          "saves": {
+            "fortitude": {
+              "value": 28
+            },
+            "reflex": {
+              "value": 21
+            },
+            "will": {
+              "value": 24
+            }
+          },
+          "abilities": {
+            "str": {
+              "mod": 6
+            },
+            "dex": {
+              "mod": 2
+            },
+            "con": {
+              "mod": 7
+            },
+            "int": {
+              "mod": 0
+            },
+            "wis": {
+              "mod": 4
+            },
+            "cha": {
+              "mod": 2
+            }
+          },
+          "skills": {
+            "athletics": {
+              "base": 26
+            },
+            "intimidation": {
+              "base": 24
+            },
+            "religion": {
+              "base": 22
+            }
+          },
+          "resources": {
+            "focus": {
+              "value": 0,
+              "max": 0
+            }
+          }
+        },
+        "items": [
+          {
+            "name": "Existential Suffocation",
+            "type": "action",
+            "img": "icons/svg/aura.svg",
+            "system": {
+              "actionType": {
+                "value": "action"
+              },
+              "actions": {
+                "value": 2
+              },
+              "category": "offensive",
+              "description": {
+                "value": "<p><b>Emotion, mental • 30 feet • single target • Fortitude DC 34.</b> The airless emptiness collapses on a soul. <b>Critical success/success</b> no Erosion; <b>failure</b> 1 Erosion; <b>critical failure</b> 2 Erosion and fatigued until the end of the encounter. Once per target per round. <b>Use the Erosion dashboard.</b></p>"
+              },
+              "traits": {
+                "value": []
+              },
+              "rules": []
+            }
+          },
+          {
+            "name": "Quiet Beyond Suffering",
+            "type": "action",
+            "img": "icons/svg/aura.svg",
+            "system": {
+              "actionType": {
+                "value": "action"
+              },
+              "actions": {
+                "value": 1
+              },
+              "category": "offensive",
+              "description": {
+                "value": "<p>The Hollow One stands still and gains a +2 circumstance bonus to AC until its next turn. If an adjacent creature voluntarily stops speaking or moving in its presence, the Hollow One may instead Step 5 feet. No HP damage.</p>"
+              },
+              "traits": {
+                "value": []
+              },
+              "rules": []
+            }
+          },
+          {
+            "name": "The Last Kindness",
+            "type": "action",
+            "img": "icons/svg/aura.svg",
+            "system": {
+              "actionType": {
+                "value": "action"
+              },
+              "actions": {
+                "value": 2
+              },
+              "category": "offensive",
+              "description": {
+                "value": "<p><b>Emotion, mental • 15 feet • Fortitude DC 34.</b> One target can choose not to resist: it suppresses frightened or stupefied until the end of its next turn but willingly takes 1 Erosion. If it resists, this ability has no effect. This is an explicit temptation rather than a save-forced loss.</p>"
+              },
+              "traits": {
+                "value": []
+              },
+              "rules": []
+            }
+          }
+        ],
+        "flags": {
+          "kiragon-homebrew": {
+            "pack": "abyssal-erosion",
+            "adversary": "hollow"
+          }
+        }
+      },
+      "abilities": [
+        {
+          "id": "suffocation",
+          "label": "Existential Suffocation",
+          "kind": "save",
+          "defense": "fortitude",
+          "dc": 34,
+          "track": "identity",
+          "erosion": {
+            "criticalFailure": 2,
+            "failure": 1
+          },
+          "conditionOnCriticalFailure": "fatigued",
+          "note": "30-ft emanation, one target. Fatigued until end of encounter; manage expiration manually."
+        }
+      ]
+    },
+    {
+      "id": "mirror",
+      "actor": {
+        "name": "Mirror of Longing",
+        "type": "npc",
+        "img": "icons/svg/mystery-man.svg",
+        "prototypeToken": {
+          "name": "Mirror of Longing",
+          "displayName": 30,
+          "disposition": -1,
+          "actorLink": false,
+          "texture": {
+            "src": "icons/svg/mystery-man.svg"
+          },
+          "width": 1,
+          "height": 1
+        },
+        "system": {
+          "details": {
+            "level": {
+              "value": 14
+            },
+            "publicNotes": "<h2>Mirror of Longing — Creature 14</h2><p><b>Medium demon, fiend, unholy</b> • psychological controller • <b>AC</b> 37; <b>HP</b> 258; <b>Fort</b> +23, <b>Ref</b> +27, <b>Will</b> +29; <b>Perception</b> +28; <b>Speed</b> 30 feet, fly 30 feet.</p><p>It reflects the person the victim most wishes to see. Its kindness is a trap: it is a perfected reflection of something that never existed.</p><p><b>Use:</b> it rolls Deception +31 against its target’s Perception DC. The dashboard automates this check and Erosion on the affected PC.</p>",
+            "privateNotes": "GM: Signature ability uses the Abyssal Erosion dashboard. These monsters deal Erosion rather than HP damage. Their HP represents spectral coherence while PCs fight them.",
+            "alliance": "opposition"
+          },
+          "traits": {
+            "value": [
+              "demon",
+              "fiend",
+              "unholy"
+            ],
+            "rarity": "rare",
+            "size": {
+              "value": "med"
+            },
+            "languages": {
+              "value": [
+                "chthonian"
+              ]
+            }
+          },
+          "attributes": {
+            "ac": {
+              "value": 37,
+              "details": ""
+            },
+            "hp": {
+              "value": 258,
+              "max": 258,
+              "temp": 0,
+              "details": "Spectral coherence; the party can reduce this normally."
+            },
+            "speed": {
+              "value": 30,
+              "otherSpeeds": [
+                {
+                  "type": "fly",
+                  "value": 30
+                }
+              ]
+            },
+            "immunities": [],
+            "resistances": [],
+            "weaknesses": []
+          },
+          "perception": {
+            "mod": 28,
+            "senses": [
+              {
+                "type": "darkvision",
+                "acuity": "precise",
+                "range": 0
+              }
+            ]
+          },
+          "saves": {
+            "fortitude": {
+              "value": 23
+            },
+            "reflex": {
+              "value": 27
+            },
+            "will": {
+              "value": 29
+            }
+          },
+          "abilities": {
+            "str": {
+              "mod": 2
+            },
+            "dex": {
+              "mod": 5
+            },
+            "con": {
+              "mod": 3
+            },
+            "int": {
+              "mod": 5
+            },
+            "wis": {
+              "mod": 6
+            },
+            "cha": {
+              "mod": 8
+            }
+          },
+          "skills": {
+            "deception": {
+              "base": 31
+            },
+            "diplomacy": {
+              "base": 29
+            },
+            "performance": {
+              "base": 30
+            },
+            "stealth": {
+              "base": 27
+            },
+            "society": {
+              "base": 26
+            }
+          },
+          "resources": {
+            "focus": {
+              "value": 0,
+              "max": 0
+            }
+          }
+        },
+        "items": [
+          {
+            "name": "The Perfect Reflection",
+            "type": "action",
+            "img": "icons/svg/aura.svg",
+            "system": {
+              "actionType": {
+                "value": "action"
+              },
+              "actions": {
+                "value": 2
+              },
+              "category": "offensive",
+              "description": {
+                "value": "<p><b>Emotion, mental, illusion • 60 feet.</b> The Mirror rolls Deception +31 against target Perception DC. <b>Critical success</b> 2 Erosion; <b>success</b> 1 Erosion; <b>failure</b> no effect; <b>critical failure</b> the Mirror is off-guard to the victim until its next turn. Once per target per round. <b>Use the Erosion dashboard.</b></p>"
+              },
+              "traits": {
+                "value": []
+              },
+              "rules": []
+            }
+          },
+          {
+            "name": "Wear Their Face",
+            "type": "action",
+            "img": "icons/svg/aura.svg",
+            "system": {
+              "actionType": {
+                "value": "action"
+              },
+              "actions": {
+                "value": 1
+              },
+              "category": "offensive",
+              "description": {
+                "value": "<p><b>Concentrate, illusion.</b> The Mirror assumes the visual form of someone its target longs to meet. It retains its statistics and cannot duplicate a unique creature’s abilities. A viewer can Seek against Deception DC 41 to identify the illusion at GM discretion.</p>"
+              },
+              "traits": {
+                "value": []
+              },
+              "rules": []
+            }
+          },
+          {
+            "name": "Unbearable Rejection",
+            "type": "action",
+            "img": "icons/svg/aura.svg",
+            "system": {
+              "actionType": {
+                "value": "action"
+              },
+              "actions": {
+                "value": 1
+              },
+              "category": "offensive",
+              "description": {
+                "value": "<p><b>Emotion, mental • 30 feet.</b> A creature that indulged an Emotional Rupture since the last bell becomes off-guard to the Mirror until the end of its next turn. No Erosion is dealt by this ability.</p>"
+              },
+              "traits": {
+                "value": []
+              },
+              "rules": []
+            }
+          }
+        ],
+        "flags": {
+          "kiragon-homebrew": {
+            "pack": "abyssal-erosion",
+            "adversary": "mirror"
+          }
+        }
+      },
+      "abilities": [
+        {
+          "id": "reflection",
+          "label": "The Perfect Reflection",
+          "kind": "skill-vs-perception",
+          "skill": "deception",
+          "track": "identity",
+          "erosion": {
+            "criticalSuccess": 2,
+            "success": 1
+          },
+          "note": "Deception vs target Perception DC. On critical failure, Mirror becomes off-guard to target until next turn (GM manages)."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "id": "fate-scars-example",
+  "name": "Fate Scars (Editable Example)",
+  "version": "0.1.0",
+  "description": "Example homebrew: 8 Fate points and a four-bell ritual. Safe to customize; does not alter the character sheet.",
+  "clocks": [
+    {
+      "id": "ritual",
+      "label": "Fate Ritual",
+      "minutes": 40,
+      "bells": 4,
+      "pauseDuringCombat": false,
+      "combatCostMinutes": 0
+    }
+  ],
+  "tracks": [
+    {
+      "id": "fate",
+      "label": "Fate Reserve",
+      "source": "fixed",
+      "initial": 8,
+      "terminalLabel": "Fate Severed",
+      "normalLabel": "Intact",
+      "clock": {
+        "id": "ritual",
+        "loss": "fractional",
+        "fraction": 0.5
+      },
+      "tiers": [
+        {
+          "atOrBelow": 0.5,
+          "label": "Strained",
+          "power": 0
+        },
+        {
+          "atOrBelow": 0.25,
+          "label": "Fractured",
+          "power": 0
+        }
+      ],
+      "effects": []
+    }
+  ],
+  "actions": [
+    {
+      "id": "spend-fate",
+      "label": "Spend 1 Fate",
+      "kind": "adjust",
+      "track": "fate",
+      "amount": -1
+    },
+    {
+      "id": "restore-fate",
+      "label": "Restore 1 Fate",
+      "kind": "adjust",
+      "track": "fate",
+      "amount": 1
+    },
+    {
+      "id": "fate-omen",
+      "label": "Read an Omen",
+      "kind": "announce",
+      "track": "fate",
+      "description": "The GM describes a possible consequence of the future."
+    }
+  ],
+  "adversaries": [],
+  "items": [
+    {
+      "id": "fate-scar-effect",
+      "document": {
+        "name": "Fate Scar (Example Effect)",
+        "type": "effect",
+        "img": "icons/magic/control/debuff-energy-hold-blue.webp",
+        "system": {
+          "description": {
+            "value": "<p>Example effect: -1 status penalty to Will. Edit this PF2e item after import.</p>"
+          },
+          "duration": {
+            "value": -1,
+            "unit": "unlimited",
+            "sustained": false
+          },
+          "traits": {
+            "value": []
+          },
+          "rules": [
+            {
+              "key": "FlatModifier",
+              "selector": "will",
+              "type": "status",
+              "value": -1
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

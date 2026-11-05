@@ -1,0 +1,3 @@
+Kiragon Homebrew Engine - custom source delivery for the Kiragon campaign.
+
+This work is provided for private modification and use. Foundry Virtual Tabletop and Pathfinder Second Edition are separate products; their respective rights belong to their owners. Imported PF2e creature data and custom homebrew should be used according to the relevant owners' terms. The source is provided without warranty.
