@@ -5,7 +5,7 @@ import {KiragonRuntime} from '../scripts/runtime.mjs';
 const read=(id)=>JSON.parse(fs.readFileSync(new URL(`../packs/${id}.json`,import.meta.url)));
 function setup(){
   const settings=new Map(),actors=[];const messages=[];
-  globalThis.game={user:{id:'gm1',isGM:true},users:[{id:'gm1',isGM:true,active:true}],items:{contents:[]},actors:{contents:actors},combats:{contents:[]},combat:null,settings:{get:(m,k)=>structuredClone(settings.get(`${m}.${k}`)??({packs:[],enabled:[],clockStates:{}}[k])),set:async(m,k,value)=>{settings.set(`${m}.${k}`,structuredClone(value));}}};
+  globalThis.game={user:{id:'gm1',isGM:true},users:[{id:'gm1',isGM:true,active:true},{id:'player1',isGM:false,active:true}],items:{contents:[]},actors:{contents:actors},combats:{contents:[]},combat:null,settings:{get:(m,k)=>structuredClone(settings.get(`${m}.${k}`)??({packs:[],enabled:[],clockStates:{}}[k])),set:async(m,k,value)=>{settings.set(`${m}.${k}`,structuredClone(value));}}};
   globalThis.ChatMessage={create:async m=>{messages.push(m);return m;}};
   globalThis.ui={notifications:{info:()=>{},warn:()=>{},error:e=>{throw Error(String(e));}}};
   let next=1;
@@ -16,7 +16,7 @@ function setup(){
     async delete(){this.actor.items=this.actor.items.filter(i=>i!==this);}
   }
   class FakeActor{
-    constructor(name,type='character',raw=null){this.id=`actor${next++}`;this.name=name;this.type=type;this._flags=structuredClone(raw?.flags??{});this.items=(raw?.items??[]).map(it=>new FakeItem(this,it));this.system=raw?.system??{details:{keyability:{value:'str'}},abilities:{str:{mod:5},dex:{mod:3},con:{mod:3},int:{mod:1},wis:{mod:2},cha:{mod:0}}};this.saves={will:{mod:22,roll:async()=>({degreeOfSuccess:0})},reflex:{roll:async()=>({degreeOfSuccess:0})},fortitude:{roll:async()=>({degreeOfSuccess:1})}};
+    constructor(name,type='character',raw=null){this.id=`actor${next++}`;this.name=name;this.type=type;this.ownership=type==='character'?{player1:3}:{};this.hasPlayerOwner=type==='character';this.isOwner=true;this.testUserPermission=(user,level)=>user.isGM||Number(this.ownership[user.id]??0)>=3;this._flags=structuredClone(raw?.flags??{});this.items=(raw?.items??[]).map(it=>new FakeItem(this,it));this.system=raw?.system??{details:{keyability:{value:'str'}},abilities:{str:{mod:5},dex:{mod:3},con:{mod:3},int:{mod:1},wis:{mod:2},cha:{mod:0}}};this.saves={will:{mod:22,roll:async()=>({degreeOfSuccess:0})},reflex:{roll:async()=>({degreeOfSuccess:0})},fortitude:{roll:async()=>({degreeOfSuccess:1})}};
       this.perception={dc:{value:32},roll:async()=>({degreeOfSuccess:1})};this.skills={deception:{roll:async()=>({degreeOfSuccess:3})}};this.conditions=[];
     }
     getFlag(ns,k){return structuredClone(this._flags?.[ns]?.[k]);}
@@ -84,4 +84,30 @@ test('generic PF2e item import is idempotent and retains ordinary item rules',as
   assert.equal(await rt.importItems(p.id),1);assert.equal(await rt.importItems(p.id),0);
   const item=game.items.contents[0];assert.equal(item.name,'Fate Scar (Example Effect)');
   assert.equal(item.system.rules[0].key,'FlatModifier');assert.equal(item.getFlag('kiragon-homebrew','template'),'fate-scar-effect');
+});
+
+test('only genuinely player-owned characters are eligible for clocks, enrollment, and monster targets',async()=>{
+  const {rt,hero,actors}=setup(),pack=read('abyssal-erosion');
+  const unassigned=new hero.constructor('GM-only character');unassigned.hasPlayerOwner=false;unassigned.ownership={};unassigned.testUserPermission=()=>false;
+  const npc=new hero.constructor('NPC','npc');
+  actors.push(unassigned,npc);
+  assert.deepEqual(rt.playerCharacters().map(a=>a.id),[hero.id]);
+  await rt.savePack(pack);await rt.setEnabled(pack.id,true);
+  await assert.rejects(()=>rt.enroll(unassigned,pack.id),/owned by a non-GM player/);
+  await rt.enroll(hero,pack.id);
+});
+test('stopwatch can reset without restoring any drained Will',async()=>{
+  const {rt,hero}=setup(),p=read('abyssal-erosion');
+  await rt.savePack(p);await rt.setEnabled(p.id,true);await rt.enroll(hero,p.id);
+  await rt.startClock(p.id,'severance');await rt.pauseClock(p.id,'severance');
+  await rt.advanceClock(p.id,'severance',1200);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,18);
+  await rt.resetClock(p.id,'severance');
+  assert.equal(rt.clock(p.id,p.clocks[0]).bells,0);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,18);
+  await rt.setBellInterval(p.id,'severance',5);
+  assert.equal(rt.pack(p.id).clocks[0].minutes,5);
+  await rt.startClock(p.id,'severance');await rt.pauseClock(p.id,'severance');
+  await rt.advanceClock(p.id,'severance',300);
+  assert.equal(rt.resource(hero,rt.pack(p.id),rt.pack(p.id).tracks[0]).value,16);
 });

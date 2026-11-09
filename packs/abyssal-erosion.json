@@ -2,8 +2,8 @@
   "schema": 1,
   "id": "abyssal-erosion",
   "name": "Abyssal Erosion — Emotion & Humanity",
-  "version": "1.2.0",
-  "description": "Unbounded real-time Erosion: every 10-minute bell costs all enrolled characters 2 Will. Higher initial Will lasts longer; monster abilities accelerate individual dissolution. No universal deadline.",
+  "version": "1.3.0",
+  "description": "Unbounded stopwatch: start at 00:00 and ring a bell every 10 minutes (configurable). Each bell costs enrolled player characters 2 Will; greater starting Will lasts longer. Player HUD shows identity and polarization.",
   "clocks": [
     {
       "id": "severance",

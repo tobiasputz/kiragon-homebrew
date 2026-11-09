@@ -1,4 +1,4 @@
-import { MODULE_ID, ABILITIES, secondsRemaining, clone } from './engine.mjs';
+import { MODULE_ID, ABILITIES, secondsRemaining, elapsedClockSeconds, clone } from './engine.mjs';
 
 const escapeHtml = v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const fmtTime = s=>`${String(Math.floor(Math.max(0,s)/60)).padStart(2,'0')}:${String(Math.floor(Math.max(0,s)%60)).padStart(2,'0')}`;
@@ -18,7 +18,51 @@ export function openDashboard(rt){
   }
   rt.dashboard.render({force:true});
 }
-export function redraw(rt){if(rt.dashboard?.rendered)rt.dashboard.render({force:true});}
+export function redraw(rt){
+  if(rt.dashboard?.rendered)rt.dashboard.render({force:true});
+  if(rt.playerHUD?.rendered)rt.playerHUD.render({force:true});
+}
+export function openPlayerHUD(rt){
+  const Base=foundry.applications?.api?.ApplicationV2;
+  if(!Base)throw Error('Foundry v13 or newer is required.');
+  if(!rt.playerHUD){
+    class KiragonPlayerHUD extends Base{
+      static DEFAULT_OPTIONS={id:'kiragon-player-hud',window:{title:'Kiragon · Character Resources',resizable:true},position:{width:380,height:390}};
+      async _renderHTML(){return renderPlayerHUD(rt);}
+      _replaceHTML(result,content){content.replaceChildren(result);}
+    }
+    rt.playerHUD=new KiragonPlayerHUD();
+  }
+  rt.playerHUD.render({force:true});
+}
+function renderPlayerHUD(rt){
+  const root=document.createElement('div');root.className='kiragon-panel kg-player-hud';
+  const characters=rt.visibleCharacters();const packs=rt.packs().filter(p=>rt.isEnabled(p.id));
+  const cards=[];
+  for(const actor of characters){
+    const active=packs.filter(p=>rt.enrolled(actor,p.id));
+    if(!active.length)continue;
+    const icon=actor.img && /^(?:https?:|icons\/|systems\/|modules\/|worlds\/|assets\/)/.test(actor.img)?`<img src="${escapeHtml(actor.img)}" alt="" class="kg-portrait">`:'';
+    const tracks=active.flatMap(p=>p.tracks.map(t=>{
+      const data=rt.resource(actor,p,t);if(!data)return '';
+      const pct=Math.round(100*data.value/data.base);
+      const theme=t.themes?.[rt.state(actor,p.id)?.key];
+      return `<div class="kg-hud-track ${data.lost?'kg-lost':''}"><div class="kg-line"><b>${escapeHtml(t.label)}</b><strong>${data.value} / ${data.base}</strong></div>
+        <div class="kg-meter"><span style="width:${Math.max(0,Math.min(100,pct))}%"></span></div>
+        <div class="kg-subtle">${escapeHtml(data.label)}${data.lost?' · LOST':data.power?` · +${data.power} ${escapeHtml(rt.state(actor,p.id).key.toUpperCase())} polarization`:''}</div>
+        ${theme?`<details><summary>${escapeHtml(theme.name)} — surge &amp; crash</summary><p><b>Surge:</b> ${escapeHtml(theme.surge)}</p><p><b>Crash:</b> ${escapeHtml(theme.crash)}</p></details>`:''}</div>`;
+    })).join('');
+    cards.push(`<div class="kg-hud-actor"><div class="kg-hud-heading">${icon}<strong>${escapeHtml(actor.name)}</strong></div>${tracks}</div>`);
+  }
+  const clocks=packs.flatMap(p=>p.clocks.filter(c=>c.repeat && characters.some(a=>rt.enrolled(a,p.id))).map(c=>{
+    const state=rt.clock(p.id,c),elapsed=elapsedClockSeconds(state);
+    return `<div class="kg-hud-clock" data-hud-pack="${escapeHtml(p.id)}" data-hud-clock="${escapeHtml(c.id)}"><span>${escapeHtml(c.label)}</span><b data-hud-elapsed>${fmtTime(elapsed)}</b><small>Next bell: <span data-hud-next>${fmtTime(secondsRemaining(state))}</span></small></div>`;
+  })).join('');
+  root.innerHTML=`<header class="kg-header"><div><div class="kg-kicker">KIRAGON · PLAYER HUD</div><h2>Your character</h2></div><div class="kg-tag">Read only</div></header>
+    ${clocks}${cards.join('')||'<div class="kg-card">No enrolled player-owned characters are available to you. Ask your GM to assign your character ownership and enroll it in a mechanic pack.</div>'}`;
+  return root;
+}
+
 function renderActor(rt,actor,p){
   const state=rt.state(actor,p.id),isGM=rt.gm;
   if(!state)return `<div class="kg-actor"><div class="kg-line"><strong>${escapeHtml(actor.name)}</strong><span class="kg-subtle">Not enrolled</span>${isGM&&rt.isEnabled(p.id)?button('Enroll','enroll',`data-actor="${actor.id}"`):''}</div></div>`;
@@ -37,19 +81,28 @@ function renderActor(rt,actor,p){
   return `<div class="kg-actor"><div class="kg-line"><h3>${escapeHtml(actor.name)}</h3><div class="kg-inline">Key ${isGM?select(ABILITIES.map(a=>({value:a,label:a.toUpperCase()})),state.key,`data-key="${actor.id}"`):escapeHtml(state.key.toUpperCase())}</div></div>
     <div class="kg-tracks">${trackCards}</div>${actions}</div>`;
 }
-function renderClock(rt,p,c){const st=rt.clock(p.id,c);const remaining=secondsRemaining(st);return `<div class="kg-clock"><div class="kg-line"><div><div class="kg-subtle">${escapeHtml(c.label.toUpperCase())}</div><div class="kg-timer" data-clock-time="${escapeHtml(c.id)}">${fmtTime(remaining)}</div></div><div><b>Bell ${st.bells}${c.repeat?'':`/${c.bells}`}</b><div class="kg-subtle">${st.running?'Running':st.combatPaused?'Paused during combat':'Paused'}</div></div></div>
-  <div class="kg-meter"><span style="width:${Math.round(100*remaining/st.durationSec)}%"></span></div>
-  ${rt.gm&&rt.isEnabled(p.id)?`<div class="kg-controls">
-    ${button('Start / Resume','start',`data-id="${c.id}"`,'',st.running||(!c.repeat&&remaining<=0))}
-    ${button('Pause','pause',`data-id="${c.id}"`,'',!st.running)}
-    ${button('−1 min','advance',`data-id="${c.id}" data-seconds="60"`)}
-    ${button('−5 min','advance',`data-id="${c.id}" data-seconds="300"`)}
-    ${button('−10 min','advance',`data-id="${c.id}" data-seconds="600"`)}
-  </div>`:''}
-  </div>`;}
+function renderClock(rt,p,c){
+  const st=rt.clock(p.id,c),elapsed=Math.floor(elapsedClockSeconds(st)),remaining=secondsRemaining(st);
+  const period=c.minutes*60/c.bells;
+  return `<div class="kg-clock"><div class="kg-line"><div><div class="kg-subtle">${escapeHtml(c.label.toUpperCase())} · ${c.repeat?'STOPWATCH':'COUNTDOWN'}</div>
+    <div class="kg-timer" data-clock-elapsed="${escapeHtml(c.id)}">${fmtTime(c.repeat?elapsed:remaining)}</div></div>
+    <div><b>Bell ${st.bells}${c.repeat?'':`/${c.bells}`}</b><div class="kg-subtle">${st.running?'Running':st.combatPaused?'Paused during combat':'Paused'}</div>
+    ${c.repeat?`<div class="kg-subtle">Next bell in <b data-clock-next="${escapeHtml(c.id)}">${fmtTime(remaining)}</b></div>`:''}</div></div>
+    <div class="kg-meter"><span style="width:${Math.round(100*(c.repeat?(elapsed%period)/period:remaining/st.durationSec))}%"></span></div>
+    ${rt.gm&&rt.isEnabled(p.id)?`<div class="kg-controls">
+      ${button('Start / Resume','start',`data-id="${c.id}"`,'',st.running||(!c.repeat&&remaining<=0))}
+      ${button('Pause','pause',`data-id="${c.id}"`,'',!st.running)}
+      ${button('+1 min','advance',`data-id="${c.id}" data-seconds="60"`)}
+      ${button('+5 min','advance',`data-id="${c.id}" data-seconds="300"`)}
+      ${button('+10 min','advance',`data-id="${c.id}" data-seconds="600"`)}
+      ${button('Reset stopwatch','reset-clock',`data-id="${c.id}"`,'muted')}
+    </div>${c.repeat?`<div class="kg-clock-config"><label>Bell every <input data-bell-minutes="${escapeHtml(c.id)}" type="number" min="1" max="${Math.floor(1440/c.bells)}" value="${period/60}"> minutes</label>
+    ${button('Set interval','set-interval',`data-id="${c.id}"`,'',st.running||st.combatPaused||st.bells>0||elapsed>0)}</div>`:''}`:''}
+  </div>`;
+}
 function renderMonster(rt,p){if(!p.adversaries.length)return '<p class="kg-subtle">No NPCs defined in this pack. You can add adversaries to the JSON.</p>';
   const monsters=game.actors.contents.filter(a=>a.type==='npc'&&rt.getAdversary(p.id,a));
-  const targets=game.actors.contents.filter(a=>a.type==='character'&&rt.enrolled(a,p.id));
+  const targets=rt.playerCharacters().filter(a=>rt.enrolled(a,p.id));
   const opts=[];for(const monster of monsters){const def=rt.getAdversary(p.id,monster);for(const a of def.abilities)opts.push({value:`${monster.id}:${a.id}`,label:`${monster.name} — ${a.label}`});}
   return `<div class="kg-card"><p class="kg-subtle">Signature abilities use PF2e statistics and reduce a custom resource instead of HP. Other NPC attacks stay on their normal PF2e sheets.</p>
   <div class="kg-controls">${rt.gm?button('Import NPCs','import-npcs'):''}
@@ -64,7 +117,7 @@ function makePanel(rt){
     ${all.length?`<div class="kg-toolbar"><label>Mechanic pack ${select(all.map(x=>({value:x.id,label:x.name})),selectedPack,'data-pack-select')}</label><span class="kg-subtle">${escapeHtml(p?.version??'')}</span>${gm&&p?button(rt.isEnabled(p.id)?'Disable pack':'Enable pack','toggle-pack',`data-id="${escapeHtml(p.id)}"`):''}</div>`:'<p>No mechanic packs installed yet. Import a pack to get started.</p>'}
     ${p?`<p class="kg-description">${escapeHtml(p.description??'No description')}</p>${!rt.isEnabled(p.id)?'<div class="kg-warning">This pack is disabled. Enable it to enroll characters and run its clocks. Existing sheet effects are removed while disabled.</div>':''}
       <section><h2>Clocks</h2>${p.clocks.length?p.clocks.map(c=>renderClock(rt,p,c)).join(''):'<p class="kg-subtle">This pack has no clocks.</p>'}</section>
-      <section><h2>Character resources</h2>${game.actors.contents.filter(a=>a.type==='character').map(a=>renderActor(rt,a,p)).join('')||'<p>No player character actors found.</p>'}</section>
+      <section><div class="kg-line"><h2>Player character resources</h2>${button('Open player HUD','hud')}</div>${rt.playerCharacters().map(a=>renderActor(rt,a,p)).join('')||'<p>No player-owned characters found. Assign a non-GM player Owner permission on their actor sheet.</p>'}</section>
       <section><h2>Adversaries</h2>${renderMonster(rt,p)}</section>
       <section><h2>PF2e World Items</h2><div class="kg-card"><p class="kg-subtle">${(p.items??[]).length} item templates (feats, effects, spells, equipment or other PF2e item documents).</p>${gm?button('Import pack items','import-items','','',!(p.items?.length)):''}</div></section>`:''}
     <section class="kg-tools"><h2>Pack Library &amp; JSON Editor</h2>
@@ -90,6 +143,9 @@ function makePanel(rt){
       case 'unenroll':if(await confirm(`Unenroll ${actor.name} from ${p.name}? This clears their ${p.name} state and managed effects.`))await rt.unEnroll(actor,p.id);break;
       case 'action':await rt.useAction(actor,p.id,btn.dataset.id);break;
       case 'toggle-pack':await rt.setEnabled(p.id,!rt.isEnabled(p.id));break;
+      case 'hud':openPlayerHUD(rt);return;
+      case 'reset-clock':if(await confirm('Reset this stopwatch to 00:00? Existing Erosion on characters is NOT removed.'))await rt.resetClock(p.id,btn.dataset.id);break;
+      case 'set-interval':await rt.setBellInterval(p.id,btn.dataset.id,Number(outer.querySelector(`[data-bell-minutes="${btn.dataset.id}"]`).value));break;
       case 'start':await rt.startClock(p.id,btn.dataset.id);break;
       case 'pause':await rt.pauseClock(p.id,btn.dataset.id);break;
       case 'advance':await rt.advanceClock(p.id,btn.dataset.id,Number(btn.dataset.seconds));break;

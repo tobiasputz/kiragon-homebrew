@@ -1,3 +1,12 @@
+## v1.2.0 — Player-focused stopwatch and HUD
+
+- Filter player enrollment and monster target menus to player-owned PF2e character actors.
+- Replace repeating-clock countdown presentation with elapsed stopwatch, next-bell display, controls and editable bell interval.
+- Preserve clock-inflicted resource losses across stopwatch resets.
+- Add owner-restricted, read-only player HUD and optional automatic opening.
+- Preserve prior v1.1.0 character Erosion and saved custom pack definitions.
+- Add coverage for ownership filtering, interval edits and safe reset.
+
 # Kiragon Homebrew 1.1.0
 
 - Replaced the 90-minute global Abyssal deadline with an indefinitely repeating 10-minute bell.

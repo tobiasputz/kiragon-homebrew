@@ -37,3 +37,22 @@
 .kiragon-panel details summary{cursor:pointer;font-weight:700}
 .kiragon-panel textarea{font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;width:100%;resize:vertical;color:inherit;background:var(--color-bg-input,#151820);padding:12px;border-radius:5px;tab-size:2;white-space:pre}
 .kiragon-chat{line-height:1.5;border-left:3px solid #965f91;padding:6px 12px}
+
+.kg-clock-config{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:12px}
+.kg-clock-config label{display:flex;align-items:center;gap:8px}
+.kg-clock-config input{width:70px;background:var(--color-bg-input,#191c27);color:inherit;padding:5px;border:1px solid var(--color-border-light-tertiary,#777);border-radius:5px}
+.kg-player-hud{min-height:210px;padding:14px}
+.kg-player-hud .kg-header h2{margin:3px 0 0;font-size:19px}
+.kg-hud-actor{padding:10px 0;border-bottom:1px solid var(--color-border-light-tertiary,#555)}
+.kg-hud-heading{display:flex;gap:9px;align-items:center;margin-bottom:9px;font-size:14px}
+.kg-portrait{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.kg-hud-track{padding:8px 4px 12px}
+.kg-hud-track .kg-meter{height:13px}
+.kg-hud-track.kg-lost .kg-meter span{background:#ab4747}
+.kg-hud-track details{font-size:11px;margin:8px 0 0}
+.kg-hud-track details summary{cursor:pointer}
+
+.kg-hud-clock{display:flex;flex-wrap:wrap;align-items:center;gap:5px 12px;background:var(--color-bg-option,#28292f);border-radius:7px;padding:9px 11px;margin:7px 0}
+.kg-hud-clock span{flex:1 1 auto;font-size:11px}
+.kg-hud-clock b{font-size:18px;font-variant-numeric:tabular-nums}
+.kg-hud-clock small{width:100%;color:var(--color-text-subtle,#aaa)}

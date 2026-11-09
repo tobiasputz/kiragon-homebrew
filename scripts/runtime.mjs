@@ -1,8 +1,20 @@
-import { MODULE_ID, ABILITIES, validatePack, clone, int, clamp, newActorPack, newClock, secondsRemaining, countedBells, elapsedClockSeconds, remaining, tierData, effectiveLoss, adjustResource, applyRupture, effectValue, outcomeLoss, degreeName } from './engine.mjs';
+import { MODULE_ID, ABILITIES, validatePack, clone, int, clamp, newActorPack, newClock, secondsRemaining, countedBells, elapsedClockSeconds, timeLoss, remaining, tierData, effectiveLoss, adjustResource, applyRupture, effectValue, outcomeLoss, degreeName } from './engine.mjs';
 
 export class KiragonRuntime {
   constructor(){this.processing=false;this.onChange=()=>{};this.lastDraw=0;}
   get gm(){return !!game.user?.isGM;}
+  // PF2e character documents also include unassigned GM-only actors. Only a
+  // character owned by at least one non-GM user belongs in PC lists.
+  isPlayerCharacter(actor){
+    if(!actor||actor.type!=='character')return false;
+    if(actor.hasPlayerOwner===true)return true;
+    return Array.from(game.users??[]).some(user=>!user.isGM &&
+      (actor.testUserPermission?.(user,'OWNER')===true ||
+       Number(actor.ownership?.[user.id]??0)>=3));
+  }
+  playerCharacters(){return game.actors.contents.filter(actor=>this.isPlayerCharacter(actor));}
+  visibleCharacters(){return this.playerCharacters().filter(actor=>this.gm || actor.isOwner===true || actor.testUserPermission?.(game.user,'OWNER')===true);}
+
   get primaryGM(){const users=game.users.filter(u=>u.active&&u.isGM).sort((a,b)=>a.id.localeCompare(b.id));return users[0]?.id===game.user?.id;}
   requireGM(){if(!this.gm)throw Error('Only the GM may modify Kiragon rules and world resources.');}
   packs(){return game.settings.get(MODULE_ID,'packs')??[];}
@@ -35,18 +47,17 @@ export class KiragonRuntime {
       const builtin=validatePack(await response.json());const index=old.findIndex(x=>x.id===file);
       if(index<0){old.push(builtin);changed=true;}
       else if(file==='abyssal-erosion'&&old[index].version==='1.1.0'){
+        const resetOldClock=true;
         // Migration from the original 90-minute absolute deadline. Resource spending is
         // preserved, but elapsed clocks reset because the old and new drains differ.
         old[index]=builtin;changed=true;
-        const states=this.clockStates();delete states[this.clockKey(file,'severance')];
-        await game.settings.set(MODULE_ID,'clockStates',states);
-        ui.notifications?.warn('Kiragon Abyssal Erosion updated: the old 90-minute clock was reset. Start the new repeating 10-minute bell when ready. Existing character Erosion is preserved.');
+        if(resetOldClock){const states=this.clockStates();delete states[this.clockKey(file,'severance')];await game.settings.set(MODULE_ID,'clockStates',states);ui.notifications?.warn('Kiragon: original 90-minute clock reset for repeating bell. Character Erosion preserved.');}
       }
     }catch(e){console.error(MODULE_ID,'Failed to load builtin pack',file,e);}}
     if(changed)await game.settings.set(MODULE_ID,'packs',old);
     this.onChange();
   }
-  async enroll(actor,packId,key){this.requireGM();const pack=this.pack(packId);if(!pack||!this.isEnabled(packId))throw Error('Enable a valid pack first.');if(actor?.type!=='character')throw Error('Choose a PF2e player character.');if(this.enrolled(actor,packId))throw Error(`${actor.name} is already enrolled in ${pack.name}.`);
+  async enroll(actor,packId,key){this.requireGM();const pack=this.pack(packId);if(!pack||!this.isEnabled(packId))throw Error('Enable a valid pack first.');if(!this.isPlayerCharacter(actor))throw Error('Choose a PF2e character owned by a non-GM player. Set player ownership on its character sheet first.');if(this.enrolled(actor,packId))throw Error(`${actor.name} is already enrolled in ${pack.name}.`);
     const initial={};for(const t of pack.tracks)initial[t.id]=this.sourceValue(actor,t);
     const all=clone(actor.getFlag(MODULE_ID,'packs')??{});all[packId]=newActorPack(pack,initial,key??this.actorKey(actor));await actor.setFlag(MODULE_ID,'packs',all);await this.syncActor(actor);await this.chat(`<b>${this.e(actor.name)}</b> enters <b>${this.e(pack.name)}</b>.`);this.onChange();}
   async changeKey(actor,packId,key){this.requireGM();if(!ABILITIES.includes(key))throw Error('Invalid ability.');await this.mutateState(actor,packId,s=>{s.key=key;});}
@@ -77,6 +88,11 @@ export class KiragonRuntime {
     return rules;
   }
   async syncActor(actor){if(!this.gm||actor.type!=='character')return;
+    if(!this.isPlayerCharacter(actor)){
+      // Previously enrolled GM-only character actors must not retain clock penalties.
+      for(const item of this.managedItems(actor))await item.delete();
+      return;
+    }
     const wanted=new Map();const all=actor.getFlag(MODULE_ID,'packs')??{};
     for(const p of this.packs().filter(p=>this.isEnabled(p.id)&&all[p.id]?.enrolled)){
       const tracks=all[p.id].tracks??{};
@@ -107,6 +123,33 @@ export class KiragonRuntime {
   }
   async grantEffect(actor,p,action){const b=action.bonus;if(!b)return;const r={key:'FlatModifier',selector:b.selector,value:b.value,label:action.label};if(b.type&&b.type!=='untyped')r.type=b.type;if(b.removeAfterRoll)r.removeAfterRoll='if-enabled';await actor.createEmbeddedDocuments('Item',[{name:`Kiragon: ${action.label}`,type:'effect',img:'icons/magic/control/buff-strength-muscle-damage.webp',system:{description:{value:`<p>${this.e(action.description??'Temporary homebrew bonus')}</p>`},duration:{value:1,unit:'minutes',sustained:false},traits:{value:[]},rules:[r]},flags:{[MODULE_ID]:{temporary:true,source:`${p.id}/${action.id}`}}}]);}
   async updateClock(packId,id,state){this.requireGM();const all=this.clockStates();all[this.clockKey(packId,id)]=state;await game.settings.set(MODULE_ID,'clockStates',all);this.onChange();}
+  async resetClock(packId,id){
+    this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);
+    if(!def)throw Error('Clock not found.');
+    // Clock-derived losses must become permanent track spending before resetting,
+    // otherwise resetting the display would accidentally restore Will.
+    for(const actor of game.actors.contents.filter(a=>this.enrolled(a,packId))){
+      const all=clone(actor.getFlag(MODULE_ID,'packs')??{}),state=all[packId];
+      for(const track of p.tracks.filter(t=>t.clock?.id===id)){
+        const entry=state.tracks?.[track.id];if(!entry)continue;
+        entry.spent+=timeLoss(track,entry,this.clockView(p,track));
+      }
+      await actor.setFlag(MODULE_ID,'packs',all);
+    }
+    await this.updateClock(packId,id,newClock(def));
+    await this.syncAll();
+    await this.chat(`<b>${this.e(def.label)}</b> stopwatch reset to 00:00. Erosion already incurred has been retained.`);
+  }
+  async setBellInterval(packId,id,minutes){
+    this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);
+    if(!def||!def.repeat)throw Error('Bell interval can only be set for repeating stopwatches.');
+    const value=Number(minutes),total=value*def.bells;
+    if(!Number.isInteger(value)||value<1||total>1440)throw Error('Enter a whole-number interval between 1 and 1440 minutes (subject to bells per cycle).');
+    const state=this.clock(packId,def);
+    if(state.running||state.combatPaused||state.bells>0||elapsedClockSeconds(state)>0)throw Error('Reset the stopwatch before changing its interval. Erosion already incurred is not cleared by resetting.');
+    const updated=clone(p);updated.clocks.find(c=>c.id===id).minutes=total;
+    await this.savePack(updated,{replace:true});await this.updateClock(packId,id,newClock(updated.clocks.find(c=>c.id===id)));
+  }
   async startClock(packId,id){this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);if(!def)throw Error('Clock not found.');if(!this.isEnabled(packId))throw Error('Enable the pack first.');const old=this.clock(packId,def);if(old.running)return;const rem=secondsRemaining(old);if(!def.repeat&&rem<=0)throw Error('Clock expired; reset the expedition to start again.');const active=!!game.combats.contents.find(c=>c.started);const paused=!!(def.pauseDuringCombat&&active);
     await this.updateClock(packId,id,{...old,remainingSec:rem,running:!paused,deadlineMs:paused?0:Date.now()+rem*1000,combatPaused:paused,...(def.repeat?{elapsedSec:elapsedClockSeconds(old),anchorMs:paused?0:Date.now()}: {})});await this.chat(`<b>${this.e(def.label)}</b> started (${def.minutes} min).`);}
   async pauseClock(packId,id){this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);const old=this.clock(packId,def);await this.updateClock(packId,id,{...old,running:false,remainingSec:secondsRemaining(old),deadlineMs:0,combatPaused:false,...(def.repeat?{elapsedSec:elapsedClockSeconds(old),anchorMs:0}: {})});}
@@ -134,7 +177,7 @@ export class KiragonRuntime {
     ui.notifications.info(`${n} Kiragon PF2e world items imported; existing entries skipped.`);this.onChange();return n;
   }
   getAdversary(packId,actor){const p=this.pack(packId);return p?.adversaries.find(a=>a.id===actor?.getFlag(MODULE_ID,'adversary')&&actor.getFlag(MODULE_ID,'pack')===packId)??null;}
-  async attack(packId,monster,target,abilityId){this.requireGM();const p=this.pack(packId),adv=this.getAdversary(packId,monster),ab=adv?.abilities.find(a=>a.id===abilityId);if(!ab||!this.enrolled(target,packId))throw Error('Select an imported monster and an enrolled character.');
+  async attack(packId,monster,target,abilityId){this.requireGM();const p=this.pack(packId),adv=this.getAdversary(packId,monster),ab=adv?.abilities.find(a=>a.id===abilityId);if(!ab||!this.isPlayerCharacter(target)||!this.enrolled(target,packId))throw Error('Select an imported monster and an enrolled player character.');
     const combat=game.combat;const tag=combat?.started?`round:${combat.id}:${combat.round}`:`bell:${p.clocks.map(c=>this.clock(packId,c).bells).join(',')}`;
     const uses=monster.getFlag(MODULE_ID,'attackUses')??{};const useKey=`${abilityId}:${target.id}`;if(uses[useKey]===tag)throw Error('This signature attack already targeted this creature in the current round/interval.');
     let stat,dc,degree;

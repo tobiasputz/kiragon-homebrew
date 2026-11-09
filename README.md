@@ -1,3 +1,37 @@
+# Kiragon Homebrew Engine v1.2.0
+
+## What's new in v1.2.0
+
+- **Player characters only:** The GM dashboard's enrollment and monster target lists contain PF2e `character` actors with **Owner** permission assigned to at least one non-GM player. Ordinary NPCs and unassigned GM character sheets are excluded. Assign character ownership in Foundry before enrolling.
+- **A stopwatch, not a deadline:** The Abyss clock begins at **00:00** and counts upward forever, ringing a bell every 10 minutes by default. The dashboard shows the elapsed time, bells sounded, and time until the next bell.
+- **Bell cadence:** Change the bell interval directly from the GM dashboard (whole minutes). The stopwatch must be reset to change the interval. You can pause/resume, advance +1/+5/+10 minutes, or reset.
+- **Safe stopwatch reset:** Resetting carries clock-inflicted Erosion into permanent recorded spending, so Will is *not* restored. To fully restart a campaign, use the existing **Reset this pack** control (which removes character enrollment and state), then reenroll.
+- **Player-facing HUD:** A compact, read-only display of the current player's enrolled character(s), each custom resource, current polarization tier, and the Surge/Crash details of their key attribute. Other players' characters are not shown. The HUD opens automatically for players with an enrolled character, unless they disable **Automatically open Kiragon HUD for players** under module settings.
+
+## Foundry installation and update
+
+For a direct installation, extract `kiragon-homebrew.zip` into your Foundry `Data/modules/kiragon-homebrew/` folder. Otherwise, publish the release assets `module.json` and `kiragon-homebrew.zip` under the GitHub release tag `v1.2.0`; Foundry can update using:
+
+`https://github.com/tobiasputz/kiragon-homebrew/releases/latest/download/module.json`
+
+**GM dashboard macro:**
+```js
+game.modules.get('kiragon-homebrew').api.open();
+```
+
+**Player HUD macro (also works for GM preview):**
+```js
+game.modules.get('kiragon-homebrew').api.openHUD();
+```
+
+The original `api.open()` macro now routes ordinary players to their HUD and GMs to the management dashboard.
+
+**Settings:** Enable the module inside the PF2e world; assign the player accounts **Owner** permission for their character actors. Enable the Abyssal Erosion pack, enroll the player characters, and press Start / Resume on the stopwatch. Each bell subtracts 2 Will from enrolled characters, and the remaining Will determines each character's key-attribute polarization. All monster abilities and other homebrew packs remain available.
+
+**Note:** If you already customized the Abyssal Erosion JSON pack, your saved definition is preserved. The new stopwatch UI works with its existing `repeat: true` clock. The module is designed for Foundry VTT 13 and PF2e and has been checked with automated mocks, but not executed in a live Foundry world.
+
+---
+
 # Kiragon — Modular Homebrew Engine
 
 **Foundry VTT 13+ · Pathfinder Second Edition · v1.0.0**
