@@ -1,3 +1,11 @@
+## v1.3.2 — Safe Unenroll and regression coverage
+- Show Unenroll even when the mechanic pack is disabled.
+- Unenroll removes only effects for the selected pack, then clears only that pack’s actor state.
+- If effect deletion fails, enrollment is retained for safe retry; orphaned effects can be cleaned by Unenroll.
+- Expose `api.unenroll(actor, packId)` for diagnostics and automation.
+- Add regression tests for disabled packs, multiple packs, failures, repeated removal, reset and live clocks.
+- Preserves the repeating stopwatch, 1 Will per bell, and player HUD.
+
 ## v1.3.1 — Stopwatch repair and gentler Erosion
 
 - Abyss bell drain reduced from 2 Will to 1 Will per configured interval.

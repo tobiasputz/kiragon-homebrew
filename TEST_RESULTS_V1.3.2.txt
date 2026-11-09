@@ -1,0 +1,190 @@
+TAP version 13
+# Subtest: builtins validate; import format is engine-wide not Abyss-specific
+ok 1 - builtins validate; import format is engine-wide not Abyss-specific
+  ---
+  duration_ms: 1.550223
+  type: 'test'
+  ...
+# Subtest: repeatable fixed drain scales survival with original Will
+ok 2 - repeatable fixed drain scales survival with original Will
+  ---
+  duration_ms: 0.411469
+  type: 'test'
+  ...
+# Subtest: power tiers polarize as Will erodes; cannot regain it by taking more Erosion
+ok 3 - power tiers polarize as Will erodes; cannot regain it by taking more Erosion
+  ---
+  duration_ms: 0.339641
+  type: 'test'
+  ...
+# Subtest: actions modify resource, recover, and obey cap
+ok 4 - actions modify resource, recover, and obey cap
+  ---
+  duration_ms: 0.286201
+  type: 'test'
+  ...
+# Subtest: once an external clock has finished, no additional recovery reverses deadline
+ok 5 - once an external clock has finished, no additional recovery reverses deadline
+  ---
+  duration_ms: 0.276617
+  type: 'test'
+  ...
+# Subtest: repeat clock has no terminal bell and catches up after pauses
+ok 6 - repeat clock has no terminal bell and catches up after pauses
+  ---
+  duration_ms: 0.278089
+  type: 'test'
+  ...
+# Subtest: rupture costs and monster save outcomes
+ok 7 - rupture costs and monster save outcomes
+  ---
+  duration_ms: 0.274493
+  type: 'test'
+  ...
+# Subtest: validator rejects executable/unsafe or broken packs
+ok 8 - validator rejects executable/unsafe or broken packs
+  ---
+  duration_ms: 4.744228
+  type: 'test'
+  ...
+# Subtest: save, activate, enroll, erode, restore and remove effects
+ok 9 - save, activate, enroll, erode, restore and remove effects
+  ---
+  duration_ms: 11.725371
+  type: 'test'
+  ...
+# Subtest: Wisdom effect offsets its own Will increase
+ok 10 - Wisdom effect offsets its own Will increase
+  ---
+  duration_ms: 4.040289
+  type: 'test'
+  ...
+# Subtest: independent mechanics and per-pack tracks do not bleed state
+ok 11 - independent mechanics and per-pack tracks do not bleed state
+  ---
+  duration_ms: 6.637327
+  type: 'test'
+  ...
+# Subtest: manual repeatable bells erode per interval without universal deadline
+ok 12 - manual repeatable bells erode per interval without universal deadline
+  ---
+  duration_ms: 7.834787
+  type: 'test'
+  ...
+# Subtest: import NPCs is idempotent and signature attacks use PF2e checks
+ok 13 - import NPCs is idempotent and signature attacks use PF2e checks
+  ---
+  duration_ms: 15.422003
+  type: 'test'
+  ...
+# Subtest: legacy actor-state migration removes old effects without wiping other packs
+ok 14 - legacy actor-state migration removes old effects without wiping other packs
+  ---
+  duration_ms: 6.656315
+  type: 'test'
+  ...
+# Subtest: generic PF2e item import is idempotent and retains ordinary item rules
+ok 15 - generic PF2e item import is idempotent and retains ordinary item rules
+  ---
+  duration_ms: 1.026104
+  type: 'test'
+  ...
+# Subtest: only genuinely player-owned characters are eligible for clocks, enrollment, and monster targets
+ok 16 - only genuinely player-owned characters are eligible for clocks, enrollment, and monster targets
+  ---
+  duration_ms: 2.505119
+  type: 'test'
+  ...
+# Subtest: stopwatch can reset without restoring any drained Will
+ok 17 - stopwatch can reset without restoring any drained Will
+  ---
+  duration_ms: 6.9658
+  type: 'test'
+  ...
+# Subtest: running stopwatch counts real elapsed seconds and rings bell at ten minutes
+ok 18 - running stopwatch counts real elapsed seconds and rings bell at ten minutes
+  ---
+  duration_ms: 3.598624
+  type: 'test'
+  ...
+# Subtest: built-in upgrade preserves pre-existing two-point Erosion per bell
+ok 19 - built-in upgrade preserves pre-existing two-point Erosion per bell
+  ---
+  duration_ms: 6.851118
+  type: 'test'
+  ...
+# Subtest: unenroll clears exactly its own actor flags and rule-element items
+ok 20 - unenroll clears exactly its own actor flags and rule-element items
+  ---
+  duration_ms: 5.283309
+  type: 'test'
+  ...
+# Subtest: unenroll works while pack disabled and UI retains Unenroll control
+ok 21 - unenroll works while pack disabled and UI retains Unenroll control
+  ---
+  duration_ms: 17.163373
+  type: 'test'
+  ...
+# Subtest: unenroll is idempotent and removes a stranded orphan effect
+ok 22 - unenroll is idempotent and removes a stranded orphan effect
+  ---
+  duration_ms: 2.39971
+  type: 'test'
+  ...
+# Subtest: failed deletion refuses to lose enrollment, later retry succeeds
+ok 23 - failed deletion refuses to lose enrollment, later retry succeeds
+  ---
+  duration_ms: 7.429198
+  type: 'test'
+  ...
+# Subtest: partial effect removal failure preserves actor enrollment for retry
+ok 24 - partial effect removal failure preserves actor enrollment for retry
+  ---
+  duration_ms: 2.598781
+  type: 'test'
+  ...
+# Subtest: stopwatch never touches an unenrolled character, other enrolled characters still drain
+ok 25 - stopwatch never touches an unenrolled character, other enrolled characters still drain
+  ---
+  duration_ms: 8.550655
+  type: 'test'
+  ...
+# Subtest: re-enrollment establishes a fresh track but preserves running global clock
+ok 26 - re-enrollment establishes a fresh track but preserves running global clock
+  ---
+  duration_ms: 4.635995
+  type: 'test'
+  ...
+# Subtest: resetPack removes all actor enrollments and clock state
+ok 27 - resetPack removes all actor enrollments and clock state
+  ---
+  duration_ms: 4.239109
+  type: 'test'
+  ...
+# Subtest: silent Foundry item deletion failure is caught and enrollment remains
+ok 28 - silent Foundry item deletion failure is caught and enrollment remains
+  ---
+  duration_ms: 3.562631
+  type: 'test'
+  ...
+# Subtest: only the GM may unenroll; a missing actor is rejected
+ok 29 - only the GM may unenroll; a missing actor is rejected
+  ---
+  duration_ms: 2.111156
+  type: 'test'
+  ...
+# Subtest: failed actor flag persistence reconstructs effects from unchanged enrollment
+ok 30 - failed actor flag persistence reconstructs effects from unchanged enrollment
+  ---
+  duration_ms: 3.945146
+  type: 'test'
+  ...
+1..30
+# tests 30
+# suites 0
+# pass 30
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 220.273705

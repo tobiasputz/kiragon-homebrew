@@ -139,3 +139,151 @@ test('built-in upgrade preserves pre-existing two-point Erosion per bell',async(
   await rt.advanceClock(p.id,'severance',600);
   assert.equal(rt.resource(hero,p,p.tracks[0]).value,15);
 });
+
+// Unenrollment regressions: exercise genuine runtime operations, not only
+// arithmetic helper functions. All checks use mock Foundry actor/item docs.
+test('unenroll clears exactly its own actor flags and rule-element items',async()=>{
+  const {rt,hero}=setup(),a=read('abyssal-erosion'),b=read('fate-scars-example');
+  b.tracks[0].effects.push({kind:'flat-modifier',selector:'perception',basedOn:'fixed',multiplier:-1});
+  await rt.savePack(a);await rt.savePack(b);
+  await rt.setEnabled(a.id,true);await rt.setEnabled(b.id,true);
+  await rt.enroll(hero,a.id);await rt.enroll(hero,b.id);
+  await rt.adjust(hero,a.id,'identity',-7);await rt.adjust(hero,b.id,'fate',-3);
+  await hero.createEmbeddedDocuments('Item',[{type:'effect',name:'Unrelated PF2e effect',system:{rules:[],description:{value:'unrelated'}},flags:{}}]);
+  const otherBefore=structuredClone(rt.state(hero,b.id));
+  await rt.unEnroll(hero,a.id);
+  assert.equal(rt.enrolled(hero,a.id),false);
+  assert.equal(rt.enrolled(hero,b.id),true);
+  assert.deepEqual(rt.state(hero,b.id),otherBefore);
+  assert.equal(rt.managedItems(hero).length,1);
+  assert.equal(rt.managedItems(hero)[0].getFlag('kiragon-homebrew','source'),`${b.id}/fate`);
+  assert.ok(hero.items.some(i=>i.name==='Unrelated PF2e effect'));
+  assert.equal(rt.resource(hero,b,b.tracks[0]).value,5);
+});
+test('unenroll works while pack disabled and UI retains Unenroll control',async()=>{
+  const {rt,hero}=setup(),pack=read('abyssal-erosion');
+  await rt.savePack(pack);await rt.setEnabled(pack.id,true);await rt.enroll(hero,pack.id);
+  await rt.adjust(hero,pack.id,'identity',-5);
+  await rt.setEnabled(pack.id,false);
+  assert.equal(rt.enrolled(hero,pack.id),true);
+  const {renderActor}=await import('../scripts/ui.mjs');
+  assert.match(renderActor(rt,hero,pack),/data-action="unenroll"/);
+  await rt.unEnroll(hero,pack.id);
+  assert.equal(rt.state(hero,pack.id),null);
+  assert.equal(rt.managedItems(hero).length,0);
+  await rt.setEnabled(pack.id,true);
+  assert.equal(rt.managedItems(hero).length,0);
+});
+test('unenroll is idempotent and removes a stranded orphan effect',async()=>{
+  const {rt,hero}=setup(),p=read('abyssal-erosion');
+  await rt.savePack(p);await rt.setEnabled(p.id,true);
+  await rt.enroll(hero,p.id);
+  await rt.unEnroll(hero,p.id);
+  await rt.unEnroll(hero,p.id);
+  await hero.createEmbeddedDocuments('Item',[{type:'effect',name:'Stale Kiragon effect',system:{rules:[],description:{value:''}},flags:{'kiragon-homebrew':{managed:true,source:'abyssal-erosion/identity'}}}]);
+  assert.equal(rt.managedItems(hero).length,1);
+  await rt.unEnroll(hero,p.id);
+  assert.equal(rt.managedItems(hero).length,0);
+  assert.equal(rt.enrolled(hero,p.id),false);
+});
+test('failed deletion refuses to lose enrollment, later retry succeeds',async()=>{
+  const {rt,hero}=setup(),p=read('abyssal-erosion');
+  await rt.savePack(p);await rt.setEnabled(p.id,true);await rt.enroll(hero,p.id);
+  await rt.adjust(hero,p.id,'identity',-6);
+  const item=rt.managedItems(hero)[0];const realDelete=item.delete.bind(item);
+  item.delete=async()=>{throw Error('Foundry refused delete');};
+  const original=structuredClone(rt.state(hero,p.id));
+  await assert.rejects(()=>rt.unEnroll(hero,p.id),/Foundry refused delete/);
+  assert.deepEqual(rt.state(hero,p.id),original);
+  assert.equal(rt.managedItems(hero).length,1);
+  item.delete=realDelete;
+  await rt.unEnroll(hero,p.id);
+  assert.equal(rt.state(hero,p.id),null);
+  assert.equal(rt.managedItems(hero).length,0);
+});
+test('partial effect removal failure preserves actor enrollment for retry',async()=>{
+  const {rt,hero}=setup(),p=read('abyssal-erosion');
+  await rt.savePack(p);await rt.setEnabled(p.id,true);await rt.enroll(hero,p.id);
+  await hero.createEmbeddedDocuments('Item',[{type:'effect',name:'extra linked effect',system:{rules:[],description:{value:''}},flags:{'kiragon-homebrew':{managed:true,source:'abyssal-erosion/other'}}}]);
+  const second=rt.managedItems(hero).find(i=>i.name==='extra linked effect');
+  const realDelete=second.delete.bind(second);
+  second.delete=async()=>{throw Error('delete failed after first item');};
+  await assert.rejects(()=>rt.unEnroll(hero,p.id),/delete failed after first item/);
+  assert.equal(rt.enrolled(hero,p.id),true);
+  second.delete=realDelete;
+  await rt.unEnroll(hero,p.id);
+  assert.equal(rt.enrolled(hero,p.id),false);
+  assert.equal(rt.managedItems(hero).length,0);
+});
+test('stopwatch never touches an unenrolled character, other enrolled characters still drain',async()=>{
+  const {rt,hero,actors}=setup(),p=read('abyssal-erosion');
+  const second=new hero.constructor('Second PC');actors.push(second);
+  await rt.savePack(p);await rt.setEnabled(p.id,true);
+  await rt.enroll(hero,p.id);await rt.enroll(second,p.id);
+  await rt.startClock(p.id,'severance');await rt.pauseClock(p.id,'severance');
+  await rt.advanceClock(p.id,'severance',600);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,21);
+  await rt.unEnroll(hero,p.id);
+  await rt.advanceClock(p.id,'severance',600);
+  assert.equal(rt.state(hero,p.id),null);
+  assert.equal(rt.managedItems(hero).length,0);
+  assert.equal(rt.resource(second,p,p.tracks[0]).value,20);
+});
+test('re-enrollment establishes a fresh track but preserves running global clock',async()=>{
+  const {rt,hero}=setup(),p=read('abyssal-erosion');
+  await rt.savePack(p);await rt.setEnabled(p.id,true);await rt.enroll(hero,p.id);
+  await rt.startClock(p.id,'severance');await rt.pauseClock(p.id,'severance');
+  await rt.advanceClock(p.id,'severance',1200);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,20);
+  await rt.unEnroll(hero,p.id);
+  assert.equal(rt.clock(p.id,p.clocks[0]).bells,2);
+  await rt.enroll(hero,p.id);
+  assert.equal(rt.clock(p.id,p.clocks[0]).bells,2);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,20,'current expedition bells apply to newly enrolled characters');
+});
+test('resetPack removes all actor enrollments and clock state',async()=>{
+  const {rt,hero,actors}=setup(),p=read('abyssal-erosion');
+  const second=new hero.constructor('Second PC');actors.push(second);
+  await rt.savePack(p);await rt.setEnabled(p.id,true);
+  await rt.enroll(hero,p.id);await rt.enroll(second,p.id);
+  await rt.advanceClock(p.id,'severance',600);
+  await rt.resetPack(p.id);
+  assert.equal(rt.state(hero,p.id),null);
+  assert.equal(rt.state(second,p.id),null);
+  assert.equal(rt.managedItems(hero).length,0);
+  assert.equal(rt.managedItems(second).length,0);
+  assert.equal(rt.clock(p.id,p.clocks[0]).bells,0);
+});
+test('silent Foundry item deletion failure is caught and enrollment remains',async()=>{
+  const {rt,hero}=setup(),p=read('abyssal-erosion');
+  await rt.savePack(p);await rt.setEnabled(p.id,true);await rt.enroll(hero,p.id);
+  await rt.adjust(hero,p.id,'identity',-5);
+  const item=rt.managedItems(hero)[0];const original=item.delete.bind(item);
+  item.delete=async()=>undefined;
+  await assert.rejects(()=>rt.unEnroll(hero,p.id),/Failed to delete/);
+  assert.equal(rt.enrolled(hero,p.id),true);
+  item.delete=original;
+  await rt.unEnroll(hero,p.id);
+  assert.equal(rt.enrolled(hero,p.id),false);
+});
+test('only the GM may unenroll; a missing actor is rejected',async()=>{
+  const {rt,hero}=setup(),p=read('abyssal-erosion');
+  await rt.savePack(p);await rt.setEnabled(p.id,true);await rt.enroll(hero,p.id);
+  game.user={id:'player1',isGM:false};
+  await assert.rejects(()=>rt.unEnroll(hero,p.id),/Only the GM/);
+  assert.equal(rt.enrolled(hero,p.id),true);
+  game.user={id:'gm1',isGM:true};
+  await assert.rejects(()=>rt.unEnroll(null,p.id),/valid character/);
+});
+test('failed actor flag persistence reconstructs effects from unchanged enrollment',async()=>{
+  const {rt,hero}=setup(),p=read('abyssal-erosion');
+  await rt.savePack(p);await rt.setEnabled(p.id,true);await rt.enroll(hero,p.id);
+  await rt.adjust(hero,p.id,'identity',-5);
+  const original=hero.setFlag.bind(hero);
+  hero.setFlag=async()=>{throw Error('Actor update rejected');};
+  await assert.rejects(()=>rt.unEnroll(hero,p.id),/Actor update rejected/);
+  assert.equal(rt.enrolled(hero,p.id),true);
+  assert.equal(rt.managedItems(hero).length,1,'automatic rollback restores managed effects');
+  hero.setFlag=original;
+  await rt.unEnroll(hero,p.id);
+});

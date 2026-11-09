@@ -185,3 +185,7 @@ The Abyss pack no longer has a universal time limit. Every **10 minutes of activ
 The frequency and drain are editable in the JSON pack: `clocks[0].minutes` and `tracks[0].clock.amount`. The mechanic does **not** drain a percentage of each character's original Will. Monster abilities still deal independent Erosion. The global timer counts exposure, not an automatic ending.
 
 Existing worlds with the original built-in Abyss pack version `1.1.0` are upgraded automatically: enrolled characters keep their recorded non-clock Erosion, but the old absolute clock is reset. If you manually customized that earlier built-in pack, export it before upgrading. Custom packs with other version numbers are left unchanged.
+
+### Unenrolling a character
+
+The GM dashboard now shows **Unenroll** for an enrolled character even if its pack is disabled. This deletes the selected pack’s managed effects and actor enrollment without affecting other packs or resetting the stopwatch. If an effect cannot be deleted, enrollment is retained and an error is shown. You can also run `await game.modules.get("kiragon-homebrew").api.unenroll(game.actors.getName("Character Name"), "abyssal-erosion")` in the console. Back up your world before upgrading.

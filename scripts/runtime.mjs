@@ -106,7 +106,38 @@ export class KiragonRuntime {
     const after=this.resource(actor,p,t).value;
     await this.chat(`<b>${this.e(actor.name)}</b>: ${this.e(reason)} — ${this.e(t.label)} ${before} → ${after}.${before>0&&after===0?` <b>LOST: ${this.e(t.terminalLabel??'Identity dissolved')}</b>`:''}`);return after;
   }
-  async unEnroll(actor,packId){this.requireGM();const all=clone(actor.getFlag(MODULE_ID,'packs')??{});delete all[packId];await actor.setFlag(MODULE_ID,'packs',all);await this.syncActor(actor);this.onChange();}
+  // Remove one pack without touching state or managed effects belonging to other packs.
+  // Delete the effects first: if Foundry rejects an item deletion, keep enrollment
+  // intact so the GM can retry instead of leaving a silently corrupted state.
+  async unEnroll(actor,packId){
+    this.requireGM();
+    if(!actor || actor.type!=='character')throw Error('Choose a valid character actor.');
+    if(typeof packId!=='string'||!packId)throw Error('Choose a valid mechanic pack.');
+    const all=clone(actor.getFlag(MODULE_ID,'packs')??{});
+    const owned=this.managedItems(actor).filter(i=>
+      typeof i.getFlag(MODULE_ID,'source')==='string' &&
+      i.getFlag(MODULE_ID,'source').startsWith(`${packId}/`));
+    // Also repair orphaned effects, even when enrollment was already removed.
+    for(const item of owned)await item.delete();
+    const leftovers=this.managedItems(actor).filter(i=>
+      typeof i.getFlag(MODULE_ID,'source')==='string' &&
+      i.getFlag(MODULE_ID,'source').startsWith(`${packId}/`));
+    if(leftovers.length)throw Error(`Failed to delete ${leftovers.length} Kiragon effect(s); enrollment was retained. Retry Unenroll.`);
+    if(Object.hasOwn(all,packId)){
+      delete all[packId];
+      try { await actor.setFlag(MODULE_ID,'packs',all); }
+      catch(error){
+        // Flag write failed after item deletion; reconstruct effects from the
+        // still-enrolled actor to avoid leaving the sheet silently inconsistent.
+        try { await this.syncActor(actor); } catch(repairError){console.error(MODULE_ID,'Unenroll rollback failed',repairError);}
+        throw error;
+      }
+    }
+    // Reconcile other packs, including when the current pack was disabled.
+    await this.syncActor(actor);
+    this.onChange();
+    return true;
+  }
   async resetPack(packId){this.requireGM();for(const a of game.actors.contents.filter(a=>this.enrolled(a,packId)))await this.unEnroll(a,packId);const p=this.pack(packId);const states=this.clockStates();for(const c of p?.clocks??[])states[this.clockKey(packId,c.id)]=newClock(c);await game.settings.set(MODULE_ID,'clockStates',states);this.onChange();}
   managedItems(actor){return actor.items.filter(i=>i.type==='effect'&&i.getFlag(MODULE_ID,'managed')===true);}
   effectRules(actor,pack,track,st){

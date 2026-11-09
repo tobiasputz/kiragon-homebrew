@@ -12,7 +12,7 @@ Hooks.once('ready',async()=>{
   if(game.system.id!=='pf2e'){ui.notifications.error('Kiragon Homebrew Engine requires the Pathfinder 2e system.');return;}
   const api={
     open:()=>rt.gm?openDashboard(rt):openPlayerHUD(rt),openHUD:()=>openPlayerHUD(rt),listPacks:()=>rt.packs(),getPack:id=>rt.pack(id),importPack:(data,options)=>rt.savePack(data,options),enable:(id,enabled=true)=>rt.setEnabled(id,enabled),
-    exportPack:id=>JSON.stringify(rt.pack(id),null,2),enroll:(actor,packId,key)=>rt.enroll(actor,packId,key),
+    exportPack:id=>JSON.stringify(rt.pack(id),null,2),enroll:(actor,packId,key)=>rt.enroll(actor,packId,key),unenroll:(actor,packId)=>rt.unEnroll(actor,packId),
     adjust:(actor,packId,trackId,delta,reason)=>rt.adjust(actor,packId,trackId,delta,reason),
     action:(actor,packId,actionId)=>rt.useAction(actor,packId,actionId),
     getState:(actor,packId)=>rt.state(actor,packId),getResource:(actor,packId,trackId)=>{const p=rt.pack(packId),t=p?.tracks.find(x=>x.id===trackId);return t?rt.resource(actor,p,t):null;},

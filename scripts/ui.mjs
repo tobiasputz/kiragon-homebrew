@@ -63,7 +63,7 @@ function renderPlayerHUD(rt){
   return root;
 }
 
-function renderActor(rt,actor,p){
+export function renderActor(rt,actor,p){
   const state=rt.state(actor,p.id),isGM=rt.gm;
   if(!state)return `<div class="kg-actor"><div class="kg-line"><strong>${escapeHtml(actor.name)}</strong><span class="kg-subtle">Not enrolled</span>${isGM&&rt.isEnabled(p.id)?button('Enroll','enroll',`data-actor="${actor.id}"`):''}</div></div>`;
   const trackCards=p.tracks.map(t=>{
@@ -77,9 +77,10 @@ function renderActor(rt,actor,p){
   const actions=isGM&&rt.isEnabled(p.id)?`<div class="kg-controls">${p.actions.map(a=>{
     const t=p.tracks.find(t=>t.id===a.track),data=rt.resource(actor,p,t),tag=rt.usageTag(a,p),used=tag&&state.uses?.[a.group??a.id]===tag;
     return button(a.label,'action',`data-actor="${actor.id}" data-id="${escapeHtml(a.id)}" title="${escapeHtml(a.description??'')}"`,a.kind==='rupture'||(a.kind==='adjust'&&a.amount<0)?'danger':'',used||data.lost||data.tier<(a.requiresTier??0));
-  }).join('')}${button('Unenroll','unenroll',`data-actor="${actor.id}"`,'muted')}</div>`:'';
+  }).join('')}</div>`:'';
+  const unenroll=isGM?`<div class="kg-controls">${button('Unenroll','unenroll',`data-actor="${actor.id}"`,'muted')}</div>`:'';
   return `<div class="kg-actor"><div class="kg-line"><h3>${escapeHtml(actor.name)}</h3><div class="kg-inline">Key ${isGM?select(ABILITIES.map(a=>({value:a,label:a.toUpperCase()})),state.key,`data-key="${actor.id}"`):escapeHtml(state.key.toUpperCase())}</div></div>
-    <div class="kg-tracks">${trackCards}</div>${actions}</div>`;
+    <div class="kg-tracks">${trackCards}</div>${actions}${unenroll}</div>`;
 }
 function renderClock(rt,p,c){
   const st=rt.clock(p.id,c),elapsed=Math.floor(elapsedClockSeconds(st)),remaining=secondsRemaining(st);
