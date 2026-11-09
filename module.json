@@ -1,8 +1,8 @@
 {
   "id": "kiragon-homebrew",
   "title": "Kiragon — Modular Homebrew Engine",
-  "description": "Modular PF2e homebrew resource packs, player-owned actor filtering, repeating stopwatch bells, player HUD, and Abyssal Erosion.",
-  "version": "1.2.0",
+  "description": "Modular PF2e homebrew engine with player HUD, PC filtering, reliable stopwatch bells and one Will lost per Abyss bell.",
+  "version": "1.3.1",
   "authors": [
     {
       "name": "Kiragon Homebrew Project"

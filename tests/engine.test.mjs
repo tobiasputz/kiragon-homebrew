@@ -14,11 +14,11 @@ test('builtins validate; import format is engine-wide not Abyss-specific',()=>{
 test('repeatable fixed drain scales survival with original Will',()=>{
   const small=newActorPack(p,{identity:16},'str').tracks.identity;
   const large=newActorPack(p,{identity:24},'str').tracks.identity;
-  assert.equal(remaining(t,small,view(4)),8);
-  assert.equal(remaining(t,large,view(4)),16);
-  assert.equal(remaining(t,small,view(8)),0);
-  assert.equal(remaining(t,large,view(8)),8);
-  assert.equal(remaining(t,large,view(12)),0);
+  assert.equal(remaining(t,small,view(4)),12);
+  assert.equal(remaining(t,large,view(4)),20);
+  assert.equal(remaining(t,small,view(8)),8);
+  assert.equal(remaining(t,large,view(8)),16);
+  assert.equal(remaining(t,large,view(12)),12);
 });
 test('power tiers polarize as Will erodes; cannot regain it by taking more Erosion',()=>{
   const s=newActorPack(p,{identity:20},'wis').tracks.identity;

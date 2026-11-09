@@ -86,7 +86,7 @@ function renderClock(rt,p,c){
   const period=c.minutes*60/c.bells;
   return `<div class="kg-clock"><div class="kg-line"><div><div class="kg-subtle">${escapeHtml(c.label.toUpperCase())} · ${c.repeat?'STOPWATCH':'COUNTDOWN'}</div>
     <div class="kg-timer" data-clock-elapsed="${escapeHtml(c.id)}">${fmtTime(c.repeat?elapsed:remaining)}</div></div>
-    <div><b>Bell ${st.bells}${c.repeat?'':`/${c.bells}`}</b><div class="kg-subtle">${st.running?'Running':st.combatPaused?'Paused during combat':'Paused'}</div>
+    <div><b>Bell ${st.bells}${c.repeat?'':`/${c.bells}`}</b><div class="kg-subtle">${st.running?'Running':st.combatPaused?'Paused during combat (enable clock during combat in pack JSON)':'Paused'}</div>
     ${c.repeat?`<div class="kg-subtle">Next bell in <b data-clock-next="${escapeHtml(c.id)}">${fmtTime(remaining)}</b></div>`:''}</div></div>
     <div class="kg-meter"><span style="width:${Math.round(100*(c.repeat?(elapsed%period)/period:remaining/st.durationSec))}%"></span></div>
     ${rt.gm&&rt.isEnabled(p.id)?`<div class="kg-controls">

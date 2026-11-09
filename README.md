@@ -1,6 +1,22 @@
-# Kiragon Homebrew Engine v1.2.0
+# Kiragon Homebrew Engine v1.3.1
 
-## What's new in v1.2.0
+## What changed in v1.3.1
+
+- **Fixed startup behavior:** The Abyss stopwatch runs through combat by default. Earlier releases could immediately pause it whenever a combat was already active.
+- **Reduced drain:** Every bell now removes **1 Will** instead of 2. Bell interval remains configurable, defaulting to 10 minutes.
+- **Live stopwatch:** Counts upward from 00:00. Time is calculated from a stored timestamp, so delayed browser ticks are caught up when the primary GM reconnects.
+- **Save-data migration:** Existing Abyssal Erosion packs with 2 Will per bell are updated automatically, preserving existing loss, recorded bells, and custom bell interval. It converts the extra historical Will loss into permanent recorded spending to prevent healing characters on upgrade. Non-Abyss packs are untouched.
+- **Still GM-authoritative:** An active primary GM client must be connected for bells to apply to characters. A running stopwatch computes elapsed real time and catches up once the GM reconnects; Foundry is not a background server timer.
+
+### Quick test (as the first active GM)
+
+1. Open Kiragon, enable Abyssal Erosion and enroll one player-owned character.
+2. Check the stopwatch shows **Paused** and **00:00** after Reset; press **Start / Resume**. It should show **Running** and advance every second.
+3. Use **+10 min** to trigger an immediate bell and confirm Identity falls exactly 1 point.
+4. If it still does not advance, open Foundry's browser developer console (F12) and look for Kiragon errors. Other logged-in GMs should close the world for testing.
+5. Resetting the stopwatch **never refunds** Will lost to previous bells. Use Reset this pack only if you deliberately want to erase enrolled character state.
+
+## Previously added in v1.2.0
 
 - **Player characters only:** The GM dashboard's enrollment and monster target lists contain PF2e `character` actors with **Owner** permission assigned to at least one non-GM player. Ordinary NPCs and unassigned GM character sheets are excluded. Assign character ownership in Foundry before enrolling.
 - **A stopwatch, not a deadline:** The Abyss clock begins at **00:00** and counts upward forever, ringing a bell every 10 minutes by default. The dashboard shows the elapsed time, bells sounded, and time until the next bell.
@@ -10,7 +26,7 @@
 
 ## Foundry installation and update
 
-For a direct installation, extract `kiragon-homebrew.zip` into your Foundry `Data/modules/kiragon-homebrew/` folder. Otherwise, publish the release assets `module.json` and `kiragon-homebrew.zip` under the GitHub release tag `v1.2.0`; Foundry can update using:
+For a direct installation, extract `kiragon-homebrew.zip` into your Foundry `Data/modules/kiragon-homebrew/` folder. Otherwise, publish the release assets `module.json` and `kiragon-homebrew.zip` under the GitHub release tag `v1.3.1`; Foundry can update using:
 
 `https://github.com/tobiasputz/kiragon-homebrew/releases/latest/download/module.json`
 
@@ -26,7 +42,7 @@ game.modules.get('kiragon-homebrew').api.openHUD();
 
 The original `api.open()` macro now routes ordinary players to their HUD and GMs to the management dashboard.
 
-**Settings:** Enable the module inside the PF2e world; assign the player accounts **Owner** permission for their character actors. Enable the Abyssal Erosion pack, enroll the player characters, and press Start / Resume on the stopwatch. Each bell subtracts 2 Will from enrolled characters, and the remaining Will determines each character's key-attribute polarization. All monster abilities and other homebrew packs remain available.
+**Settings:** Enable the module inside the PF2e world; assign the player accounts **Owner** permission for their character actors. Enable the Abyssal Erosion pack, enroll the player characters, and press Start / Resume on the stopwatch. Each bell subtracts 1 Will from enrolled characters, and the remaining Will determines each character's key-attribute polarization. All monster abilities and other homebrew packs remain available.
 
 **Note:** If you already customized the Abyssal Erosion JSON pack, your saved definition is preserved. The new stopwatch UI works with its existing `repeat: true` clock. The module is designed for Foundry VTT 13 and PF2e and has been checked with automated mocks, but not executed in a live Foundry world.
 
@@ -40,7 +56,7 @@ Kiragon is a **data-driven, extensible GM homebrew toolkit**. Instead of one har
 
 **Included packs:**
 
-1. `Abyssal Erosion` — your original adventure: Will-based identity, escalating key-attribute power, 90-minute clock, emotional temptations and ruptures, and three spectral monsters for a level-13 party.
+1. `Abyssal Erosion` — your original adventure: Will-based identity, escalating key-attribute power, indefinite 10-minute stopwatch, emotional temptations and ruptures, and three spectral monsters for a level-13 party.
 2. `Fate Scars (Example)` — a small unrelated pool and ritual clock, with a sample PF2e Effect item; suitable as a starter template.
 
 Packs are **disabled until the GM enables them**. Mechanics from one pack do not interfere with another pack's actor flags, clocks or rule-element effect items.
@@ -73,10 +89,10 @@ game.modules.get('kiragon-homebrew').api.open();
 3. Select **Abyssal Erosion** and click **Enable pack**.
 4. Enroll each player character. The engine captures their starting Will modifier (avoid temporary buffs while enrolling) and finds their key ability.
 5. Click **Import NPCs** in the Adversaries section to create Grasping Regret (level 12), Hollow One (level 13), and Mirror of Longing (level 14) in the Actors directory.
-6. Run the **Severance Clock**. Every 10 minutes (or after GM manual advancement), a bell progressively reduces their Identity pool. The same track gains key-attribute power at 75%, 50%, and 25% Will remaining.
+6. Run the **Abyssal stopwatch**. Every 10 minutes (or after GM manual advancement), a bell progressively reduces their Identity pool. The same track gains key-attribute power at 75%, 50%, and 25% Will remaining.
 7. Use the actor cards for Erosion, emotional Ruptures, Overdrive, recovery, and the NPC signature-ability roller.
 
-Clocks are **real time**, not Foundry's game-time clock. While a clock runs, the primary active GM handles bell transitions. Configured clocks pause on initiative and charge a fixed amount when combat ends. Other players see the updated world state and actor effects.
+Clocks are **real time**, not Foundry's game-time clock. While a clock runs, the primary active GM handles bell transitions. Other custom packs may optionally pause during combat; the Abyss stopwatch does not pause by default. Other players see the updated world state and actor effects.
 
 ## Use other homebrew packs
 

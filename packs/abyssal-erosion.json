@@ -2,8 +2,8 @@
   "schema": 1,
   "id": "abyssal-erosion",
   "name": "Abyssal Erosion — Emotion & Humanity",
-  "version": "1.3.0",
-  "description": "Unbounded stopwatch: start at 00:00 and ring a bell every 10 minutes (configurable). Each bell costs enrolled player characters 2 Will; greater starting Will lasts longer. Player HUD shows identity and polarization.",
+  "version": "1.3.1",
+  "description": "Unbounded real-time stopwatch with bells every configurable interval; each bell drains 1 Will per enrolled player character. More starting Will means greater endurance. Stopwatch runs during combat by default.",
   "clocks": [
     {
       "id": "severance",
@@ -11,7 +11,7 @@
       "minutes": 10,
       "bells": 1,
       "repeat": true,
-      "pauseDuringCombat": true,
+      "pauseDuringCombat": false,
       "combatCostMinutes": 5
     }
   ],
@@ -25,7 +25,7 @@
       "clock": {
         "id": "severance",
         "loss": "fixed",
-        "amount": 2
+        "amount": 1
       },
       "tiers": [
         {

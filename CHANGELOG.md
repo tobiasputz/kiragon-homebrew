@@ -1,3 +1,11 @@
+## v1.3.1 — Stopwatch repair and gentler Erosion
+
+- Abyss bell drain reduced from 2 Will to 1 Will per configured interval.
+- Abyss stopwatch now runs during combat by default, fixing the common apparent freeze when combat was active.
+- Existing built-in Abyss pack settings migrated to new drain while retaining previous Erosion, elapsed bells, and user-adjusted interval.
+- Clearer clock startup feedback and primary-GM requirement.
+- Added elapsed real-time clock and migration regression tests.
+
 ## v1.2.0 — Player-focused stopwatch and HUD
 
 - Filter player enrollment and monster target menus to player-owned PF2e character actors.

@@ -60,9 +60,11 @@ test('manual repeatable bells erode per interval without universal deadline',asy
   await rt.startClock(p.id,'severance');await rt.pauseClock(p.id,'severance');
   await rt.advanceClock(p.id,'severance',600);assert.equal(rt.clock(p.id,p.clocks[0]).bells,1);
   await rt.advanceClock(p.id,'severance',4800);assert.equal(rt.clock(p.id,p.clocks[0]).bells,9);
-  assert.equal(rt.resource(hero,p,p.tracks[0]).value,4);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,13);
   await rt.advanceClock(p.id,'severance',1200);assert.equal(rt.clock(p.id,p.clocks[0]).bells,11);
-  assert.equal(rt.resource(hero,p,p.tracks[0]).value,0);assert.equal(rt.state(hero,p.id).tracks.identity.lost,true);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,11);
+  await rt.advanceClock(p.id,'severance',6600);assert.equal(rt.resource(hero,p,p.tracks[0]).value,0);
+  assert.equal(rt.state(hero,p.id).tracks.identity.lost,true);
   await assert.rejects(()=>rt.adjust(hero,p.id,'identity',1));
 });
 test('import NPCs is idempotent and signature attacks use PF2e checks',async()=>{
@@ -101,13 +103,39 @@ test('stopwatch can reset without restoring any drained Will',async()=>{
   await rt.savePack(p);await rt.setEnabled(p.id,true);await rt.enroll(hero,p.id);
   await rt.startClock(p.id,'severance');await rt.pauseClock(p.id,'severance');
   await rt.advanceClock(p.id,'severance',1200);
-  assert.equal(rt.resource(hero,p,p.tracks[0]).value,18);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,20);
   await rt.resetClock(p.id,'severance');
   assert.equal(rt.clock(p.id,p.clocks[0]).bells,0);
-  assert.equal(rt.resource(hero,p,p.tracks[0]).value,18);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,20);
   await rt.setBellInterval(p.id,'severance',5);
   assert.equal(rt.pack(p.id).clocks[0].minutes,5);
   await rt.startClock(p.id,'severance');await rt.pauseClock(p.id,'severance');
   await rt.advanceClock(p.id,'severance',300);
-  assert.equal(rt.resource(hero,rt.pack(p.id),rt.pack(p.id).tracks[0]).value,16);
+  assert.equal(rt.resource(hero,rt.pack(p.id),rt.pack(p.id).tracks[0]).value,19);
+});
+
+test('running stopwatch counts real elapsed seconds and rings bell at ten minutes',async()=>{
+  const {rt,hero}=setup(),p=read('abyssal-erosion');await rt.savePack(p);await rt.setEnabled(p.id,true);await rt.enroll(hero,p.id);
+  await rt.startClock(p.id,'severance');
+  const states=rt.clockStates(),key='abyssal-erosion/severance';
+  states[key].anchorMs=Date.now()-600_100;
+  await game.settings.set('kiragon-homebrew','clockStates',states);
+  await rt.processClocks();
+  assert.equal(rt.clock(p.id,p.clocks[0]).bells,1);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,21);
+});
+test('built-in upgrade preserves pre-existing two-point Erosion per bell',async()=>{
+  const {rt,hero}=setup(),old=read('abyssal-erosion');
+  old.version='1.3.0';old.tracks[0].clock.amount=2;old.clocks[0].pauseDuringCombat=true;
+  await rt.savePack(old);await rt.setEnabled(old.id,true);await rt.enroll(hero,old.id);
+  await rt.advanceClock(old.id,'severance',1800);
+  assert.equal(rt.resource(hero,old,old.tracks[0]).value,16);
+  globalThis.fetch=async()=>({ok:true,json:async()=>read('abyssal-erosion')});
+  await rt.ensureBuiltins();
+  const p=rt.pack('abyssal-erosion');
+  assert.equal(p.tracks[0].clock.amount,1);
+  assert.equal(p.clocks[0].pauseDuringCombat,false);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,16);
+  await rt.advanceClock(p.id,'severance',600);
+  assert.equal(rt.resource(hero,p,p.tracks[0]).value,15);
 });

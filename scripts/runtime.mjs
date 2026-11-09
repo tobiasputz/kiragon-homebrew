@@ -41,20 +41,57 @@ export class KiragonRuntime {
   }
   async deletePack(id){this.requireGM();if(game.actors.contents.some(a=>this.enrolled(a,id)))throw Error('Reset or unenroll all actors first. Their state will not be silently discarded.');const old=this.packs();await game.settings.set(MODULE_ID,'packs',old.filter(p=>p.id!==id));await this.setEnabled(id,false);const states=this.clockStates();for(const k of Object.keys(states))if(k.startsWith(id+'/'))delete states[k];await game.settings.set(MODULE_ID,'clockStates',states);this.onChange();}
   async setEnabled(id,enabled){this.requireGM();if(!this.pack(id)&&enabled)throw Error('Unknown pack.');const ids=new Set(this.enabled());enabled?ids.add(id):ids.delete(id);await game.settings.set(MODULE_ID,'enabled',[...ids]);if(!enabled){const p=this.pack(id);if(p){for(const c of p.clocks){const x=this.clock(id,c);if(x.running)await this.updateClock(id,c.id,{...x,remainingSec:secondsRemaining(x),running:false,deadlineMs:0,...(c.repeat?{elapsedSec:elapsedClockSeconds(x),anchorMs:0}: {})});}}}await this.syncAll();this.onChange();}
-  async ensureBuiltins(){if(!this.primaryGM)return;const old=this.packs();let changed=false;
-    for(const file of ['abyssal-erosion','fate-scars-example']){try{
-      const response=await fetch(`modules/${MODULE_ID}/packs/${file}.json`);if(!response.ok)throw Error(response.status);
-      const builtin=validatePack(await response.json());const index=old.findIndex(x=>x.id===file);
-      if(index<0){old.push(builtin);changed=true;}
-      else if(file==='abyssal-erosion'&&old[index].version==='1.1.0'){
-        const resetOldClock=true;
-        // Migration from the original 90-minute absolute deadline. Resource spending is
-        // preserved, but elapsed clocks reset because the old and new drains differ.
-        old[index]=builtin;changed=true;
-        if(resetOldClock){const states=this.clockStates();delete states[this.clockKey(file,'severance')];await game.settings.set(MODULE_ID,'clockStates',states);ui.notifications?.warn('Kiragon: original 90-minute clock reset for repeating bell. Character Erosion preserved.');}
-      }
-    }catch(e){console.error(MODULE_ID,'Failed to load builtin pack',file,e);}}
-    if(changed)await game.settings.set(MODULE_ID,'packs',old);
+  async ensureBuiltins(){
+    if(!this.primaryGM)return;
+    const packs=this.packs();let changed=false;
+    for(const file of ['abyssal-erosion','fate-scars-example']){
+      try{
+        const response=await fetch(`modules/${MODULE_ID}/packs/${file}.json`);
+        if(!response.ok)throw Error(`HTTP ${response.status}`);
+        const builtin=validatePack(await response.json());
+        const index=packs.findIndex(x=>x.id===file);
+        if(index<0){packs.push(builtin);changed=true;continue;}
+        if(file!=='abyssal-erosion')continue;
+        const previous=packs[index];
+        const oldTrack=previous.tracks.find(t=>t.id==='identity');
+        const newTrack=builtin.tracks.find(t=>t.id==='identity');
+        const oldClock=previous.clocks.find(c=>c.id==='severance');
+        const newClockDef=builtin.clocks.find(c=>c.id==='severance');
+        const oldAmount=oldTrack?.clock?.loss==='fixed'?oldTrack.clock.amount:null;
+        // Upgrade only the stock repeating Abyss rules, not independently authored packs.
+        if(!oldClock?.repeat || oldAmount===null || oldAmount<newTrack.clock.amount)continue;
+        if(previous.version===builtin.version && oldAmount===newTrack.clock.amount)continue;
+        // Preserve the GM's configured interval. The old module had combat pause enabled
+        // by default, which made the stopwatch appear stuck during encounters.
+        newClockDef.minutes=oldClock.minutes;
+        newClockDef.bells=oldClock.bells;
+        // For every already-sounded bell, convert the difference in old drain into
+        // accumulated spent Erosion, so upgrading does not heal or re-drain anyone.
+        const clockState=this.clock(file,oldClock);
+        const counted=clockState.bells;
+        const difference=(oldAmount-newTrack.clock.amount)*counted;
+        if(difference>0){
+          for(const actor of game.actors.contents.filter(a=>this.enrolled(a,file))){
+            const all=clone(actor.getFlag(MODULE_ID,'packs')??{});
+            const track=all[file]?.tracks?.identity;
+            if(!track)continue;
+            track.spent+=difference;
+            await actor.setFlag(MODULE_ID,'packs',all);
+          }
+        }
+        // If the previous clock was paused automatically by combat, resume it now.
+        if(clockState.combatPaused){
+          await this.updateClock(file,'severance',{
+            ...clockState,combatPaused:false,running:true,
+            elapsedSec:elapsedClockSeconds(clockState),anchorMs:Date.now(),
+            deadlineMs:0
+          });
+        }
+        packs[index]=builtin;changed=true;
+        ui.notifications?.info('Kiragon Abyss updated: 1 Will per bell, stopwatch runs through combat. Existing Erosion and bell history preserved.');
+      }catch(e){console.error(MODULE_ID,'Failed to load builtin pack',file,e);}
+    }
+    if(changed){await game.settings.set(MODULE_ID,'packs',packs);await this.syncAll();}
     this.onChange();
   }
   async enroll(actor,packId,key){this.requireGM();const pack=this.pack(packId);if(!pack||!this.isEnabled(packId))throw Error('Enable a valid pack first.');if(!this.isPlayerCharacter(actor))throw Error('Choose a PF2e character owned by a non-GM player. Set player ownership on its character sheet first.');if(this.enrolled(actor,packId))throw Error(`${actor.name} is already enrolled in ${pack.name}.`);
@@ -150,8 +187,8 @@ export class KiragonRuntime {
     const updated=clone(p);updated.clocks.find(c=>c.id===id).minutes=total;
     await this.savePack(updated,{replace:true});await this.updateClock(packId,id,newClock(updated.clocks.find(c=>c.id===id)));
   }
-  async startClock(packId,id){this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);if(!def)throw Error('Clock not found.');if(!this.isEnabled(packId))throw Error('Enable the pack first.');const old=this.clock(packId,def);if(old.running)return;const rem=secondsRemaining(old);if(!def.repeat&&rem<=0)throw Error('Clock expired; reset the expedition to start again.');const active=!!game.combats.contents.find(c=>c.started);const paused=!!(def.pauseDuringCombat&&active);
-    await this.updateClock(packId,id,{...old,remainingSec:rem,running:!paused,deadlineMs:paused?0:Date.now()+rem*1000,combatPaused:paused,...(def.repeat?{elapsedSec:elapsedClockSeconds(old),anchorMs:paused?0:Date.now()}: {})});await this.chat(`<b>${this.e(def.label)}</b> started (${def.minutes} min).`);}
+  async startClock(packId,id){this.requireGM();if(!this.primaryGM)throw Error("Only the primary active GM can run the stopwatch. Open Kiragon as the first active GM.");const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);if(!def)throw Error('Clock not found.');if(!this.isEnabled(packId))throw Error('Enable the pack first.');const old=this.clock(packId,def);if(old.running)return;const rem=secondsRemaining(old);if(!def.repeat&&rem<=0)throw Error('Clock expired; reset the expedition to start again.');const active=!!game.combats.contents.find(c=>c.started);const paused=!!(def.pauseDuringCombat&&active);
+    await this.updateClock(packId,id,{...old,remainingSec:rem,running:!paused,deadlineMs:paused?0:Date.now()+rem*1000,combatPaused:paused,...(def.repeat?{elapsedSec:elapsedClockSeconds(old),anchorMs:paused?0:Date.now()}: {})});await this.chat(`<b>${this.e(def.label)}</b> stopwatch started; next bell in ${def.minutes/def.bells} minutes.`);await this.processClocks();}
   async pauseClock(packId,id){this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);const old=this.clock(packId,def);await this.updateClock(packId,id,{...old,running:false,remainingSec:secondsRemaining(old),deadlineMs:0,combatPaused:false,...(def.repeat?{elapsedSec:elapsedClockSeconds(old),anchorMs:0}: {})});}
   async advanceClock(packId,id,seconds){this.requireGM();const p=this.pack(packId),def=p?.clocks.find(c=>c.id===id);const old=this.clock(packId,def);const rem=Math.max(0,secondsRemaining(old)-int(seconds));await this.updateClock(packId,id,def.repeat?{...old,elapsedSec:elapsedClockSeconds(old)+Math.max(0,int(seconds)),anchorMs:old.running?Date.now():0}:{...old,remainingSec:rem,deadlineMs:old.running?Date.now()+rem*1000:0});await this.processClocks();}
   async processClocks(){if(!this.primaryGM||this.processing)return;this.processing=true;
