@@ -1,0 +1,1437 @@
+[
+  {
+    "slug": "joy",
+    "actor": {
+      "name": "The Ecstatic — Joy",
+      "type": "npc",
+      "img": "modules/kiragon-homebrew/expansions/leifs-hope/assets/portraits/joy.png",
+      "system": {
+        "details": {
+          "level": {
+            "value": 12
+          },
+          "publicNotes": "<h2>The Ecstatic — Joy, Creature 12</h2><p>An ecstatic manifestation, competing with Anger to claim the hearts of the party. NOT a demon.</p><p><strong>Contest:</strong> Five rounds. Each PC tracks Happiness 0–5 and Anger 0–5 separately. First to 5: drain exactly 1 Erosion Will once, grant the matching permanent once/day boon. Neither at 5: no reward and no extra Erosion.</p><p><strong>Everything Is Wonderful [two actions]</strong> Will DC 31, one target within 30 ft: CS/S +0, F +1 Happiness, CF +2 Happiness. <strong>Infectious Laughter [one action]</strong> ranged +26 within 30 ft, success +1 Happiness, critical +2. No HP damage.</p><p><strong>Reconciliation:</strong> 3 VP toward helping Joy understand Anger is necessary to defend happiness (Diplomacy/Performance/Occultism DC 31). Requires Anger also at 3 VP; alternative to contest. No permanent death.</p>",
+          "privateNotes": "KIRAGON LEIF'S HOPE: these are emotions, NOT demons. They can never be permanently killed; resolve their special win conditions. Damage is narrative/suppression only.",
+          "alliance": "opposition"
+        },
+        "traits": {
+          "value": [
+            "spirit",
+            "emotion"
+          ],
+          "rarity": "unique",
+          "size": {
+            "value": "med"
+          },
+          "languages": {
+            "value": []
+          }
+        },
+        "attributes": {
+          "ac": {
+            "value": 33,
+            "details": ""
+          },
+          "hp": {
+            "value": 165,
+            "max": 165,
+            "temp": 0,
+            "details": "Emotion: at 0 HP disperses for 1 round; reforms. Do not treat as killed."
+          },
+          "speed": {
+            "value": 30,
+            "otherSpeeds": []
+          },
+          "immunities": [],
+          "resistances": [],
+          "weaknesses": []
+        },
+        "perception": {
+          "mod": 22,
+          "senses": [
+            {
+              "type": "darkvision",
+              "acuity": "precise",
+              "range": 0
+            }
+          ]
+        },
+        "saves": {
+          "fortitude": {
+            "value": 19
+          },
+          "reflex": {
+            "value": 25
+          },
+          "will": {
+            "value": 22
+          }
+        },
+        "abilities": {
+          "str": {
+            "mod": 3
+          },
+          "dex": {
+            "mod": 3
+          },
+          "con": {
+            "mod": 4
+          },
+          "int": {
+            "mod": 2
+          },
+          "wis": {
+            "mod": 4
+          },
+          "cha": {
+            "mod": 5
+          }
+        },
+        "skills": {},
+        "resources": {
+          "focus": {
+            "value": 0,
+            "max": 0
+          }
+        }
+      },
+      "items": [
+        {
+          "name": "Everything Is Wonderful [two actions]",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>One PC within 30 feet attempts a DC 31 Will save. Critical success/success: 0 Happiness. Failure: +1 Happiness; critical failure: +2 Happiness. Once Happiness reaches 5 before Anger, that PC loses 1 Erosion Will and gains Gift of Joy. No other Erosion from this ability."
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 2
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        },
+        {
+          "name": "Infectious Laughter [one action]",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>Ranged attack +26, range 30 ft. Hit: +1 Happiness, critical hit: +2 Happiness. No HP damage. GM applies points with the Kiragon Contest macro.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        },
+        {
+          "name": "The Contest / No Death",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>After five rounds or successful mutual reconciliation, the contest ends. At 0 HP, Joy disperses for one round and reforms; it cannot die in this plane.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        }
+      ],
+      "prototypeToken": {
+        "name": "The Ecstatic — Joy",
+        "texture": {
+          "src": "modules/kiragon-homebrew/expansions/leifs-hope/assets/tokens/joy.webp"
+        },
+        "width": 1,
+        "height": 1,
+        "actorLink": false,
+        "disposition": -1,
+        "displayName": 20,
+        "displayBars": 0,
+        "sight": {
+          "enabled": false
+        },
+        "flags": {}
+      }
+    }
+  },
+  {
+    "slug": "anger",
+    "actor": {
+      "name": "The Indignant — Anger",
+      "type": "npc",
+      "img": "modules/kiragon-homebrew/expansions/leifs-hope/assets/portraits/anger.png",
+      "system": {
+        "details": {
+          "level": {
+            "value": 12
+          },
+          "publicNotes": "<h2>The Indignant — Anger, Creature 12</h2><p>Raw fury demanding to be proven the stronger emotion. NOT a demon.</p><p><strong>Everything Is Unfair [two actions]</strong> Will DC 31, one target within 30 ft: CS/S +0; F +1 Anger; CF +2 Anger. <strong>Infuriating Accusation [one action]</strong> ranged +26 within 30 ft: hit +1 Anger, critical hit +2. No HP damage.</p><p><strong>Reconciliation</strong> 3 VP to understand Joy is not denial (DC 31), and Joy must also reach 3 VP. First personal counter at 5 costs exactly 1 Erosion and grants a permanent gift. If neither reaches 5, neither gift nor extra Erosion.</p>",
+          "privateNotes": "KIRAGON LEIF'S HOPE: these are emotions, NOT demons. They can never be permanently killed; resolve their special win conditions. Damage is narrative/suppression only.",
+          "alliance": "opposition"
+        },
+        "traits": {
+          "value": [
+            "spirit",
+            "emotion"
+          ],
+          "rarity": "unique",
+          "size": {
+            "value": "med"
+          },
+          "languages": {
+            "value": []
+          }
+        },
+        "attributes": {
+          "ac": {
+            "value": 33,
+            "details": ""
+          },
+          "hp": {
+            "value": 165,
+            "max": 165,
+            "temp": 0,
+            "details": "Emotion: at 0 HP disperses for 1 round; reforms. Do not treat as killed."
+          },
+          "speed": {
+            "value": 30,
+            "otherSpeeds": []
+          },
+          "immunities": [],
+          "resistances": [],
+          "weaknesses": []
+        },
+        "perception": {
+          "mod": 22,
+          "senses": [
+            {
+              "type": "darkvision",
+              "acuity": "precise",
+              "range": 0
+            }
+          ]
+        },
+        "saves": {
+          "fortitude": {
+            "value": 25
+          },
+          "reflex": {
+            "value": 22
+          },
+          "will": {
+            "value": 19
+          }
+        },
+        "abilities": {
+          "str": {
+            "mod": 3
+          },
+          "dex": {
+            "mod": 3
+          },
+          "con": {
+            "mod": 4
+          },
+          "int": {
+            "mod": 2
+          },
+          "wis": {
+            "mod": 4
+          },
+          "cha": {
+            "mod": 5
+          }
+        },
+        "skills": {},
+        "resources": {
+          "focus": {
+            "value": 0,
+            "max": 0
+          }
+        }
+      },
+      "items": [
+        {
+          "name": "Everything Is Unfair [two actions]",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>One PC within 30 feet attempts a DC 31 Will save. Critical success/success: 0 Anger. Failure: +1 Anger; critical failure: +2 Anger. Once Anger reaches 5 before Happiness, lose 1 Erosion Will and gain Gift of Anger.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 2
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        },
+        {
+          "name": "Infuriating Accusation [one action]",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>Ranged attack +26, range 30 ft. Hit: +1 Anger; critical hit: +2 Anger. No HP damage. GM adds Anger in the contest tracker.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        },
+        {
+          "name": "The Contest / No Death",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>At 0 HP, Anger disperses for one round before reforming. No permanent killing. Only contest completion or reconciliation ends it.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        }
+      ],
+      "prototypeToken": {
+        "name": "The Indignant — Anger",
+        "texture": {
+          "src": "modules/kiragon-homebrew/expansions/leifs-hope/assets/tokens/anger.webp"
+        },
+        "width": 1,
+        "height": 1,
+        "actorLink": false,
+        "disposition": -1,
+        "displayName": 20,
+        "displayBars": 0,
+        "sight": {
+          "enabled": false
+        },
+        "flags": {}
+      }
+    }
+  },
+  {
+    "slug": "grief",
+    "actor": {
+      "name": "Grief — The Thing That Begs to Be Killed",
+      "type": "npc",
+      "img": "modules/kiragon-homebrew/expansions/leifs-hope/assets/portraits/grief.png",
+      "system": {
+        "details": {
+          "level": {
+            "value": 13
+          },
+          "publicNotes": "<h2>Grief — The Thing That Begs to Be Killed</h2><p>It is a fragment of Leif. It begs to be killed, but no one can truly kill an emotion in the Abyss. Violence scatters it temporarily; abandoned grief follows the party. Comfort through 3 VP with Diplomacy, Medicine, Religion or Occultism DC 31 (critical success 2 VP, success 1 VP, critical failure -1 VP). True win: acknowledge the importance of grief and let it accompany the party. Optional emotional anchor.</p>",
+          "privateNotes": "KIRAGON LEIF'S HOPE: these are emotions, NOT demons. They can never be permanently killed; resolve their special win conditions. Damage is narrative/suppression only.",
+          "alliance": "opposition"
+        },
+        "traits": {
+          "value": [
+            "spirit",
+            "emotion"
+          ],
+          "rarity": "unique",
+          "size": {
+            "value": "med"
+          },
+          "languages": {
+            "value": []
+          }
+        },
+        "attributes": {
+          "ac": {
+            "value": 31,
+            "details": ""
+          },
+          "hp": {
+            "value": 100,
+            "max": 100,
+            "temp": 0,
+            "details": "Emotion: at 0 HP disperses for 1 round; reforms. Do not treat as killed."
+          },
+          "speed": {
+            "value": 25,
+            "otherSpeeds": []
+          },
+          "immunities": [],
+          "resistances": [],
+          "weaknesses": []
+        },
+        "perception": {
+          "mod": 22,
+          "senses": [
+            {
+              "type": "darkvision",
+              "acuity": "precise",
+              "range": 0
+            }
+          ]
+        },
+        "saves": {
+          "fortitude": {
+            "value": 20
+          },
+          "reflex": {
+            "value": 23
+          },
+          "will": {
+            "value": 28
+          }
+        },
+        "abilities": {
+          "str": {
+            "mod": 3
+          },
+          "dex": {
+            "mod": 3
+          },
+          "con": {
+            "mod": 4
+          },
+          "int": {
+            "mod": 2
+          },
+          "wis": {
+            "mod": 4
+          },
+          "cha": {
+            "mod": 5
+          }
+        },
+        "skills": {},
+        "resources": {
+          "focus": {
+            "value": 0,
+            "max": 0
+          }
+        }
+      },
+      "items": [
+        {
+          "name": "Plea for Release",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>“Please. Please kill me. I can’t bear feeling this anymore.” An emotion cannot be destroyed here. At 0 HP, the fragment disperses and returns. Comfort by reaching 3 Victory Points, or leave it behind to appear later.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        }
+      ],
+      "prototypeToken": {
+        "name": "Grief — The Thing That Begs to Be Killed",
+        "texture": {
+          "src": "modules/kiragon-homebrew/expansions/leifs-hope/assets/tokens/grief.webp"
+        },
+        "width": 1,
+        "height": 1,
+        "actorLink": false,
+        "disposition": -1,
+        "displayName": 20,
+        "displayBars": 0,
+        "sight": {
+          "enabled": false
+        },
+        "flags": {}
+      }
+    }
+  },
+  {
+    "slug": "resignation",
+    "actor": {
+      "name": "The End of Wanting — Resignation",
+      "type": "npc",
+      "img": "modules/kiragon-homebrew/expansions/leifs-hope/assets/portraits/resignation.png",
+      "system": {
+        "details": {
+          "level": {
+            "value": 16
+          },
+          "publicNotes": "<h2>The End of Wanting — Unique Creature 16</h2><p>A weary protector surrounding Leif’s Hope, who willingly hides. It believes that ending hope prevents disappointment. No demon trait.</p><p><b>AC 38, HP 295, Fort +28, Ref +25, Will +30, Perception +28.</b> <b>Crushing Certainty [one action]</b> melee +30, reach 15 ft, hit frightened 1 / critical frightened 2; no HP damage. <b>Nothing Will Change [two actions]</b> 30-ft emanation, DC 35 Will save, recharge 1d4 rounds: CS none; S frightened 1; F frightened 1, slowed 1 for 1 round; CF frightened 2, slowed 1 for 1 round, lose 1 Erosion Will. Cap extra Erosion to 1 per PC per round. <b>Remember How It Ended [reaction]</b> when a Hope Point is earned: DC 35 Will save, fail frightened 1, crit fail frightened 2; VP not removed.</p><p><b>Fractured Certainty:</b> if party deals 60 damage in a round, boss cannot use reactions until next turn, next Hope VP check gains +2 circumstance.</p><p><b>VICTORY:</b> 6 Hope Points, with three 2-point stages: Fear of Failure, Fear of Pain, Fear of Trying Again. Skill checks generally DC 31, 2 actions per check, CS 2 / S 1 / F 0 / CF -1 current barrier. Genuine personal appeal to Hope may gain a point without roll. Reducing Resignation to 0 HP only disperses it for one round, then it reforms at full HP. It cannot be killed; surrendering control of Hope ends the fight.</p>",
+          "privateNotes": "KIRAGON LEIF'S HOPE: these are emotions, NOT demons. They can never be permanently killed; resolve their special win conditions. Damage is narrative/suppression only.",
+          "alliance": "opposition"
+        },
+        "traits": {
+          "value": [
+            "spirit",
+            "emotion"
+          ],
+          "rarity": "unique",
+          "size": {
+            "value": "huge"
+          },
+          "languages": {
+            "value": []
+          }
+        },
+        "attributes": {
+          "ac": {
+            "value": 38,
+            "details": ""
+          },
+          "hp": {
+            "value": 295,
+            "max": 295,
+            "temp": 0,
+            "details": "Emotion: at 0 HP disperses for 1 round; reforms. Do not treat as killed."
+          },
+          "speed": {
+            "value": 30,
+            "otherSpeeds": []
+          },
+          "immunities": [],
+          "resistances": [],
+          "weaknesses": []
+        },
+        "perception": {
+          "mod": 28,
+          "senses": [
+            {
+              "type": "darkvision",
+              "acuity": "precise",
+              "range": 0
+            }
+          ]
+        },
+        "saves": {
+          "fortitude": {
+            "value": 28
+          },
+          "reflex": {
+            "value": 25
+          },
+          "will": {
+            "value": 30
+          }
+        },
+        "abilities": {
+          "str": {
+            "mod": 3
+          },
+          "dex": {
+            "mod": 3
+          },
+          "con": {
+            "mod": 4
+          },
+          "int": {
+            "mod": 2
+          },
+          "wis": {
+            "mod": 4
+          },
+          "cha": {
+            "mod": 5
+          }
+        },
+        "skills": {},
+        "resources": {
+          "focus": {
+            "value": 0,
+            "max": 0
+          }
+        }
+      },
+      "items": [
+        {
+          "name": "Crushing Certainty [one action]",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>Melee +30, reach 15 feet. Hit: frightened 1; crit: frightened 2. No HP damage.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        },
+        {
+          "name": "Nothing Will Change [two actions]",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>30-foot emanation. Will DC 35. CS none; S frightened 1; F frightened 1 and slowed 1 for 1 round; CF frightened 2, slowed 1 for 1 round, and -1 Kiragon Erosion Will. Recharge 1d4 rounds. Cap monster-inflicted Erosion to 1 per PC per round.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 2
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        },
+        {
+          "name": "Remember How It Ended [reaction]",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>Trigger: A Hope Point is gained. Target PC rolls DC 35 Will save; failure frightened 1, crit failure frightened 2. Hope Point remains.</p>"
+            },
+            "actionType": {
+              "value": "reaction"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        },
+        {
+          "name": "Fractured Certainty",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>If party deals 60+ cumulative damage in one round, boss loses reactions until next turn; next rescue check gains +2 circumstance.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        },
+        {
+          "name": "Unending Emotion",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>At 0 HP, suppressed for 1 round; reform full HP. Only 6 Hope Points resolve the encounter, never destruction.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        }
+      ],
+      "prototypeToken": {
+        "name": "The End of Wanting — Resignation",
+        "texture": {
+          "src": "modules/kiragon-homebrew/expansions/leifs-hope/assets/tokens/resignation.webp"
+        },
+        "width": 3,
+        "height": 3,
+        "actorLink": false,
+        "disposition": -1,
+        "displayName": 20,
+        "displayBars": 0,
+        "sight": {
+          "enabled": false
+        },
+        "flags": {}
+      }
+    }
+  },
+  {
+    "slug": "hope",
+    "actor": {
+      "name": "Leif’s Hope",
+      "type": "npc",
+      "img": "modules/kiragon-homebrew/expansions/leifs-hope/assets/portraits/hope.png",
+      "system": {
+        "details": {
+          "level": {
+            "value": 13
+          },
+          "publicNotes": "<h2>Leif’s Hope</h2><p>A small, pale figure resembling Leif. It willingly hides with Resignation to avoid future disappointment. Hope must choose to stand up; it cannot simply be carried away or slain. Three lessons: success cannot be promised, pain need not negate care, and trying again is worthwhile despite uncertainty.</p>",
+          "privateNotes": "KIRAGON LEIF'S HOPE: these are emotions, NOT demons. They can never be permanently killed; resolve their special win conditions. Damage is narrative/suppression only.",
+          "alliance": "opposition"
+        },
+        "traits": {
+          "value": [
+            "spirit",
+            "emotion"
+          ],
+          "rarity": "unique",
+          "size": {
+            "value": "med"
+          },
+          "languages": {
+            "value": []
+          }
+        },
+        "attributes": {
+          "ac": {
+            "value": 30,
+            "details": ""
+          },
+          "hp": {
+            "value": 75,
+            "max": 75,
+            "temp": 0,
+            "details": "Emotion: at 0 HP disperses for 1 round; reforms. Do not treat as killed."
+          },
+          "speed": {
+            "value": 25,
+            "otherSpeeds": []
+          },
+          "immunities": [],
+          "resistances": [],
+          "weaknesses": []
+        },
+        "perception": {
+          "mod": 25,
+          "senses": [
+            {
+              "type": "darkvision",
+              "acuity": "precise",
+              "range": 0
+            }
+          ]
+        },
+        "saves": {
+          "fortitude": {
+            "value": 20
+          },
+          "reflex": {
+            "value": 22
+          },
+          "will": {
+            "value": 28
+          }
+        },
+        "abilities": {
+          "str": {
+            "mod": 3
+          },
+          "dex": {
+            "mod": 3
+          },
+          "con": {
+            "mod": 4
+          },
+          "int": {
+            "mod": 2
+          },
+          "wis": {
+            "mod": 4
+          },
+          "cha": {
+            "mod": 5
+          }
+        },
+        "skills": {},
+        "resources": {
+          "focus": {
+            "value": 0,
+            "max": 0
+          }
+        }
+      },
+      "items": [
+        {
+          "name": "I Want to Find Out",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>“I don’t know if it will be better. But I want to find out.” On six Hope Points, it can reunite with Leif. The guiding will-o’-wisp is an independent being with its own identity; it is NOT Leif’s Hope.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        }
+      ],
+      "prototypeToken": {
+        "name": "Leif’s Hope",
+        "texture": {
+          "src": "modules/kiragon-homebrew/expansions/leifs-hope/assets/tokens/hope.webp"
+        },
+        "width": 1,
+        "height": 1,
+        "actorLink": false,
+        "disposition": -1,
+        "displayName": 20,
+        "displayBars": 0,
+        "sight": {
+          "enabled": false
+        },
+        "flags": {}
+      }
+    }
+  },
+  {
+    "slug": "four-fear",
+    "actor": {
+      "name": "Leif — Fear",
+      "type": "npc",
+      "img": "modules/kiragon-homebrew/expansions/leifs-hope/assets/portraits/hope.png",
+      "system": {
+        "details": {
+          "level": {
+            "value": 13
+          },
+          "publicNotes": "<h2>The Four Who Are One — Fear</h2><p>One of four identical figures resembling Leif. “Without me, nothing will ever frighten them again.” All four are authentic; none is an impostor. They cannot be killed. To overcome the obstacle, the party must accept Fear, Shame, Love, and Anger as parts of Leif, not choose only one. Occultism/Religion/Diplomacy DC 31; Perception DC 33. Any honest acceptance may resolve a fragment without a check.</p>",
+          "privateNotes": "KIRAGON LEIF'S HOPE: these are emotions, NOT demons. They can never be permanently killed; resolve their special win conditions. Damage is narrative/suppression only.",
+          "alliance": "opposition"
+        },
+        "traits": {
+          "value": [
+            "spirit",
+            "emotion"
+          ],
+          "rarity": "unique",
+          "size": {
+            "value": "med"
+          },
+          "languages": {
+            "value": []
+          }
+        },
+        "attributes": {
+          "ac": {
+            "value": 30,
+            "details": ""
+          },
+          "hp": {
+            "value": 50,
+            "max": 50,
+            "temp": 0,
+            "details": "Emotion: at 0 HP disperses for 1 round; reforms. Do not treat as killed."
+          },
+          "speed": {
+            "value": 25,
+            "otherSpeeds": []
+          },
+          "immunities": [],
+          "resistances": [],
+          "weaknesses": []
+        },
+        "perception": {
+          "mod": 22,
+          "senses": [
+            {
+              "type": "darkvision",
+              "acuity": "precise",
+              "range": 0
+            }
+          ]
+        },
+        "saves": {
+          "fortitude": {
+            "value": 21
+          },
+          "reflex": {
+            "value": 21
+          },
+          "will": {
+            "value": 25
+          }
+        },
+        "abilities": {
+          "str": {
+            "mod": 3
+          },
+          "dex": {
+            "mod": 3
+          },
+          "con": {
+            "mod": 4
+          },
+          "int": {
+            "mod": 2
+          },
+          "wis": {
+            "mod": 4
+          },
+          "cha": {
+            "mod": 5
+          }
+        },
+        "skills": {},
+        "resources": {
+          "focus": {
+            "value": 0,
+            "max": 0
+          }
+        }
+      },
+      "items": [
+        {
+          "name": "A Part of Leif",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>“Without me, nothing will ever frighten them again.” All four must be acknowledged. No lethal victory.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        }
+      ],
+      "prototypeToken": {
+        "name": "Leif — Fear",
+        "texture": {
+          "src": "modules/kiragon-homebrew/expansions/leifs-hope/assets/tokens/hope.webp"
+        },
+        "width": 1,
+        "height": 1,
+        "actorLink": false,
+        "disposition": -1,
+        "displayName": 20,
+        "displayBars": 0,
+        "sight": {
+          "enabled": false
+        },
+        "flags": {}
+      }
+    }
+  },
+  {
+    "slug": "four-shame",
+    "actor": {
+      "name": "Leif — Shame",
+      "type": "npc",
+      "img": "modules/kiragon-homebrew/expansions/leifs-hope/assets/portraits/hope.png",
+      "system": {
+        "details": {
+          "level": {
+            "value": 13
+          },
+          "publicNotes": "<h2>The Four Who Are One — Shame</h2><p>One of four identical figures resembling Leif. “If you take me back, they will remember it all.” All four are authentic; none is an impostor. They cannot be killed. To overcome the obstacle, the party must accept Fear, Shame, Love, and Anger as parts of Leif, not choose only one. Occultism/Religion/Diplomacy DC 31; Perception DC 33. Any honest acceptance may resolve a fragment without a check.</p>",
+          "privateNotes": "KIRAGON LEIF'S HOPE: these are emotions, NOT demons. They can never be permanently killed; resolve their special win conditions. Damage is narrative/suppression only.",
+          "alliance": "opposition"
+        },
+        "traits": {
+          "value": [
+            "spirit",
+            "emotion"
+          ],
+          "rarity": "unique",
+          "size": {
+            "value": "med"
+          },
+          "languages": {
+            "value": []
+          }
+        },
+        "attributes": {
+          "ac": {
+            "value": 30,
+            "details": ""
+          },
+          "hp": {
+            "value": 50,
+            "max": 50,
+            "temp": 0,
+            "details": "Emotion: at 0 HP disperses for 1 round; reforms. Do not treat as killed."
+          },
+          "speed": {
+            "value": 25,
+            "otherSpeeds": []
+          },
+          "immunities": [],
+          "resistances": [],
+          "weaknesses": []
+        },
+        "perception": {
+          "mod": 22,
+          "senses": [
+            {
+              "type": "darkvision",
+              "acuity": "precise",
+              "range": 0
+            }
+          ]
+        },
+        "saves": {
+          "fortitude": {
+            "value": 21
+          },
+          "reflex": {
+            "value": 21
+          },
+          "will": {
+            "value": 25
+          }
+        },
+        "abilities": {
+          "str": {
+            "mod": 3
+          },
+          "dex": {
+            "mod": 3
+          },
+          "con": {
+            "mod": 4
+          },
+          "int": {
+            "mod": 2
+          },
+          "wis": {
+            "mod": 4
+          },
+          "cha": {
+            "mod": 5
+          }
+        },
+        "skills": {},
+        "resources": {
+          "focus": {
+            "value": 0,
+            "max": 0
+          }
+        }
+      },
+      "items": [
+        {
+          "name": "A Part of Leif",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>“If you take me back, they will remember it all.” All four must be acknowledged. No lethal victory.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        }
+      ],
+      "prototypeToken": {
+        "name": "Leif — Shame",
+        "texture": {
+          "src": "modules/kiragon-homebrew/expansions/leifs-hope/assets/tokens/hope.webp"
+        },
+        "width": 1,
+        "height": 1,
+        "actorLink": false,
+        "disposition": -1,
+        "displayName": 20,
+        "displayBars": 0,
+        "sight": {
+          "enabled": false
+        },
+        "flags": {}
+      }
+    }
+  },
+  {
+    "slug": "four-love",
+    "actor": {
+      "name": "Leif — Love",
+      "type": "npc",
+      "img": "modules/kiragon-homebrew/expansions/leifs-hope/assets/portraits/hope.png",
+      "system": {
+        "details": {
+          "level": {
+            "value": 13
+          },
+          "publicNotes": "<h2>The Four Who Are One — Love</h2><p>One of four identical figures resembling Leif. “Without me, nobody can break their heart again.” All four are authentic; none is an impostor. They cannot be killed. To overcome the obstacle, the party must accept Fear, Shame, Love, and Anger as parts of Leif, not choose only one. Occultism/Religion/Diplomacy DC 31; Perception DC 33. Any honest acceptance may resolve a fragment without a check.</p>",
+          "privateNotes": "KIRAGON LEIF'S HOPE: these are emotions, NOT demons. They can never be permanently killed; resolve their special win conditions. Damage is narrative/suppression only.",
+          "alliance": "opposition"
+        },
+        "traits": {
+          "value": [
+            "spirit",
+            "emotion"
+          ],
+          "rarity": "unique",
+          "size": {
+            "value": "med"
+          },
+          "languages": {
+            "value": []
+          }
+        },
+        "attributes": {
+          "ac": {
+            "value": 30,
+            "details": ""
+          },
+          "hp": {
+            "value": 50,
+            "max": 50,
+            "temp": 0,
+            "details": "Emotion: at 0 HP disperses for 1 round; reforms. Do not treat as killed."
+          },
+          "speed": {
+            "value": 25,
+            "otherSpeeds": []
+          },
+          "immunities": [],
+          "resistances": [],
+          "weaknesses": []
+        },
+        "perception": {
+          "mod": 22,
+          "senses": [
+            {
+              "type": "darkvision",
+              "acuity": "precise",
+              "range": 0
+            }
+          ]
+        },
+        "saves": {
+          "fortitude": {
+            "value": 21
+          },
+          "reflex": {
+            "value": 21
+          },
+          "will": {
+            "value": 25
+          }
+        },
+        "abilities": {
+          "str": {
+            "mod": 3
+          },
+          "dex": {
+            "mod": 3
+          },
+          "con": {
+            "mod": 4
+          },
+          "int": {
+            "mod": 2
+          },
+          "wis": {
+            "mod": 4
+          },
+          "cha": {
+            "mod": 5
+          }
+        },
+        "skills": {},
+        "resources": {
+          "focus": {
+            "value": 0,
+            "max": 0
+          }
+        }
+      },
+      "items": [
+        {
+          "name": "A Part of Leif",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>“Without me, nobody can break their heart again.” All four must be acknowledged. No lethal victory.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        }
+      ],
+      "prototypeToken": {
+        "name": "Leif — Love",
+        "texture": {
+          "src": "modules/kiragon-homebrew/expansions/leifs-hope/assets/tokens/hope.webp"
+        },
+        "width": 1,
+        "height": 1,
+        "actorLink": false,
+        "disposition": -1,
+        "displayName": 20,
+        "displayBars": 0,
+        "sight": {
+          "enabled": false
+        },
+        "flags": {}
+      }
+    }
+  },
+  {
+    "slug": "four-anger-fragment",
+    "actor": {
+      "name": "Leif — Anger",
+      "type": "npc",
+      "img": "modules/kiragon-homebrew/expansions/leifs-hope/assets/portraits/hope.png",
+      "system": {
+        "details": {
+          "level": {
+            "value": 13
+          },
+          "publicNotes": "<h2>The Four Who Are One — Anger</h2><p>One of four identical figures resembling Leif. “Without me, they never have to hate again.” All four are authentic; none is an impostor. They cannot be killed. To overcome the obstacle, the party must accept Fear, Shame, Love, and Anger as parts of Leif, not choose only one. Occultism/Religion/Diplomacy DC 31; Perception DC 33. Any honest acceptance may resolve a fragment without a check.</p>",
+          "privateNotes": "KIRAGON LEIF'S HOPE: these are emotions, NOT demons. They can never be permanently killed; resolve their special win conditions. Damage is narrative/suppression only.",
+          "alliance": "opposition"
+        },
+        "traits": {
+          "value": [
+            "spirit",
+            "emotion"
+          ],
+          "rarity": "unique",
+          "size": {
+            "value": "med"
+          },
+          "languages": {
+            "value": []
+          }
+        },
+        "attributes": {
+          "ac": {
+            "value": 30,
+            "details": ""
+          },
+          "hp": {
+            "value": 50,
+            "max": 50,
+            "temp": 0,
+            "details": "Emotion: at 0 HP disperses for 1 round; reforms. Do not treat as killed."
+          },
+          "speed": {
+            "value": 25,
+            "otherSpeeds": []
+          },
+          "immunities": [],
+          "resistances": [],
+          "weaknesses": []
+        },
+        "perception": {
+          "mod": 22,
+          "senses": [
+            {
+              "type": "darkvision",
+              "acuity": "precise",
+              "range": 0
+            }
+          ]
+        },
+        "saves": {
+          "fortitude": {
+            "value": 21
+          },
+          "reflex": {
+            "value": 21
+          },
+          "will": {
+            "value": 25
+          }
+        },
+        "abilities": {
+          "str": {
+            "mod": 3
+          },
+          "dex": {
+            "mod": 3
+          },
+          "con": {
+            "mod": 4
+          },
+          "int": {
+            "mod": 2
+          },
+          "wis": {
+            "mod": 4
+          },
+          "cha": {
+            "mod": 5
+          }
+        },
+        "skills": {},
+        "resources": {
+          "focus": {
+            "value": 0,
+            "max": 0
+          }
+        }
+      },
+      "items": [
+        {
+          "name": "A Part of Leif",
+          "type": "action",
+          "system": {
+            "description": {
+              "value": "<p>“Without me, they never have to hate again.” All four must be acknowledged. No lethal victory.</p>"
+            },
+            "actionType": {
+              "value": "action"
+            },
+            "actions": {
+              "value": 1
+            },
+            "category": "interaction",
+            "traits": {
+              "value": [
+                "emotion",
+                "mental"
+              ]
+            },
+            "rules": []
+          }
+        }
+      ],
+      "prototypeToken": {
+        "name": "Leif — Anger",
+        "texture": {
+          "src": "modules/kiragon-homebrew/expansions/leifs-hope/assets/tokens/hope.webp"
+        },
+        "width": 1,
+        "height": 1,
+        "actorLink": false,
+        "disposition": -1,
+        "displayName": 20,
+        "displayBars": 0,
+        "sight": {
+          "enabled": false
+        },
+        "flags": {}
+      }
+    }
+  }
+]

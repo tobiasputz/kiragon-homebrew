@@ -1,0 +1,60 @@
+[
+  {
+    "id": "joy",
+    "name": "Gift of Joy (Abyss)",
+    "img": "modules/kiragon-homebrew/expansions/leifs-hope/assets/portraits/joy.png",
+    "type": "action",
+    "system": {
+      "description": {
+        "value": "<h2>Contagious Happiness [one action]</h2><p><b>Frequency:</b> once per day. <b>Emotion, Mental</b></p><p>You and one willing ally within 30 feet each gain 15 temporary HP for 1 minute, reduce the frightened condition by 1 (minimum 0), and gain a +1 status bonus to Will saves against emotion effects for 1 minute. As usual, status bonuses do not stack with other status bonuses to the same check.</p><p>This is a <b>permanent ability</b> earned by reaching 5 Happiness before 5 Anger in the Abyss; the threshold also costs 1 Identity (Will) from the existing Kiragon Erosion pack.</p><p><b>GM:</b> activate once per day; apply temporary HP/conditions and bonus as adjudicated. Importing this item alone does not automatically modify HP or consume the daily use.</p>"
+      },
+      "category": "interaction",
+      "actionType": {
+        "value": "action"
+      },
+      "actions": {
+        "value": 1
+      },
+      "frequency": {
+        "max": 1,
+        "per": "day"
+      },
+      "traits": {
+        "value": [
+          "emotion",
+          "mental"
+        ]
+      },
+      "rules": []
+    }
+  },
+  {
+    "id": "anger",
+    "name": "Gift of Anger (Abyss)",
+    "img": "modules/kiragon-homebrew/expansions/leifs-hope/assets/portraits/anger.png",
+    "type": "action",
+    "system": {
+      "description": {
+        "value": "<h2>Righteous Indignation [reaction]</h2><p><b>Frequency:</b> once per day. <b>Trigger:</b> An enemy deals damage to you or an ally within 30 feet. <b>Emotion, Mental</b></p><p>Reduce the triggering damage by 15. The next successful Strike you make before the end of your next turn deals an extra 2d6 spirit damage. The protected ally need not be within your reach.</p><p>This is a <b>permanent ability</b> earned by reaching 5 Anger before 5 Happiness in the Abyss; the threshold also costs 1 Identity (Will) through Kiragon.</p><p><b>GM:</b> resolve timing and damage reduction manually. This item does not automate reduction or extra damage.</p>"
+      },
+      "category": "interaction",
+      "actionType": {
+        "value": "reaction"
+      },
+      "actions": {
+        "value": null
+      },
+      "frequency": {
+        "max": 1,
+        "per": "day"
+      },
+      "traits": {
+        "value": [
+          "emotion",
+          "mental"
+        ]
+      },
+      "rules": []
+    }
+  }
+]
